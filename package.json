@@ -1,11 +1,11 @@
 {
-  "name": "mcp-knowledge-graph",
+  "name": "mcp-knowledge-graph-mia",
   "version": "1.0.3",
-  "description": "MCP server enabling persistent memory for AI models through a local knowledge graph",
+  "description": "Mia's MCP server enabling persistent memory for AI models through a local knowledge graph",
   "license": "MIT",
   "author": "Shane Holloman",
-  "homepage": "https://github.com/shaneholloman/mcp-knowledge-graph",
-  "bugs": "https://github.com/shaneholloman/mcp-knowledge-graph/issues",
+  "homepage": "https://github.com/miadisabelle/mcp-knowledge-graph",
+  "bugs": "https://github.com/miadisabelle/mcp-knowledge-graph/issues",
   "type": "module",
   "bin": {
     "mcp-knowledge-graph": "dist/index.js"

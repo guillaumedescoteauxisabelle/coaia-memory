@@ -1,4 +1,4 @@
-# `mcp-knowledge-graph`
+# `mcp-knowledge-graph-mia`
 
 > Knowledge Graph Memory Server
 
@@ -12,12 +12,12 @@ This lets AI models remember information about the user across chats. It works w
 ## Server Name
 
 ```txt
-mcp-knowledge-graph
+mcp-knowledge-graph-mia
 ```
 
-![screen-of-server-name](https://raw.githubusercontent.com/shaneholloman/mcp-knowledge-graph/main/img/server-name.png)
+![screen-of-server-name](https://raw.githubusercontent.com/miadisabelle/mcp-knowledge-graph/main/img/server-name.png)
 
-![read-function](https://raw.githubusercontent.com/shaneholloman/mcp-knowledge-graph/main/img/read-function.png)
+![read-function](https://raw.githubusercontent.com/miadisabelle/mcp-knowledge-graph/main/img/read-function.png)
 
 ## Core Concepts
 
@@ -166,7 +166,7 @@ Add this to your claude_desktop_config.json:
       "command": "npx",
       "args": [
         "-y",
-        "mcp-knowledge-graph",
+        "mcp-knowledge-graph-mia",
         "--memory-path",
         "/Users/shaneholloman/Dropbox/shane/db/memory.jsonl"
       ],
@@ -201,7 +201,7 @@ You can specify a custom path for the memory file:
       "command": "npx",
       "args": [
         "-y",
-        "mcp-knowledge-graph",
+        "mcp-knowledge-graph-mia",
         "--memory-path",
         "/Users/shaneholloman/Dropbox/shane/db/memory.jsonl"
       ],
