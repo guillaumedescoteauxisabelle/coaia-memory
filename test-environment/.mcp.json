@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "coaia-memory": {
+      "command": "node",
+      "args": ["../dist/index.js", "--memory-path", "./test-memory.jsonl"],
+      "autoapprove": [
+        "create_structural_tension_chart",
+        "telescope_action_step", 
+        "mark_action_complete",
+        "get_chart_progress",
+        "list_active_charts",
+        "create_entities",
+        "create_relations",
+        "add_observations"
+      ]
+    }
+  }
+}
