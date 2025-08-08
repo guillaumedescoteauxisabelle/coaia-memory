@@ -27,16 +27,32 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MEMORY_FILE_PATH = memoryPath || path.join(__dirname, 'memory.jsonl');
 
 // We are storing our memory using entities, relations, and observations in a graph structure
+// Extended for Creative Orientation AI Assistant (COAIA) with structural tension support
 interface Entity {
   name: string;
   entityType: string;
   observations: string[];
+  metadata?: {
+    dueDate?: string;
+    chartId?: string;
+    phase?: 'germination' | 'assimilation' | 'completion';
+    completionStatus?: boolean;
+    parentChart?: string;
+    parentActionStep?: string;
+    level?: number;
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
 interface Relation {
   from: string;
   to: string;
   relationType: string;
+  metadata?: {
+    createdAt?: string;
+    strength?: number;
+  };
 }
 
 interface KnowledgeGraph {
@@ -187,6 +203,289 @@ class KnowledgeGraphManager {
 
     return filteredGraph;
   }
+
+  // COAIA-specific methods for structural tension charts and creative processes
+
+  async createStructuralTensionChart(
+    desiredOutcome: string,
+    currentReality: string,
+    dueDate: string,
+    actionSteps?: string[]
+  ): Promise<{ chartId: string; entities: Entity[]; relations: Relation[] }> {
+    const chartId = `chart_${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    
+    // Create chart, desired outcome, and current reality entities
+    const entities: Entity[] = [
+      {
+        name: `${chartId}_chart`,
+        entityType: 'structural_tension_chart',
+        observations: [`Chart created on ${timestamp}`],
+        metadata: {
+          chartId,
+          dueDate,
+          level: 0,
+          createdAt: timestamp,
+          updatedAt: timestamp
+        }
+      },
+      {
+        name: `${chartId}_desired_outcome`,
+        entityType: 'desired_outcome',
+        observations: [desiredOutcome],
+        metadata: {
+          chartId,
+          dueDate,
+          createdAt: timestamp,
+          updatedAt: timestamp
+        }
+      },
+      {
+        name: `${chartId}_current_reality`,
+        entityType: 'current_reality',
+        observations: [currentReality],
+        metadata: {
+          chartId,
+          createdAt: timestamp,
+          updatedAt: timestamp
+        }
+      }
+    ];
+
+    // Add action steps if provided
+    if (actionSteps && actionSteps.length > 0) {
+      const stepDueDates = this.distributeActionStepDates(new Date(), new Date(dueDate), actionSteps.length);
+      
+      actionSteps.forEach((step, index) => {
+        entities.push({
+          name: `${chartId}_action_${index + 1}`,
+          entityType: 'action_step',
+          observations: [step],
+          metadata: {
+            chartId,
+            dueDate: stepDueDates[index].toISOString(),
+            completionStatus: false,
+            createdAt: timestamp,
+            updatedAt: timestamp
+          }
+        });
+      });
+    }
+
+    // Create relations
+    const relations: Relation[] = [
+      {
+        from: `${chartId}_chart`,
+        to: `${chartId}_desired_outcome`,
+        relationType: 'contains',
+        metadata: { createdAt: timestamp }
+      },
+      {
+        from: `${chartId}_chart`,
+        to: `${chartId}_current_reality`,
+        relationType: 'contains',
+        metadata: { createdAt: timestamp }
+      },
+      {
+        from: `${chartId}_current_reality`,
+        to: `${chartId}_desired_outcome`,
+        relationType: 'creates_tension_with',
+        metadata: { createdAt: timestamp }
+      }
+    ];
+
+    // Add action step relations
+    if (actionSteps && actionSteps.length > 0) {
+      actionSteps.forEach((_, index) => {
+        const actionName = `${chartId}_action_${index + 1}`;
+        relations.push(
+          {
+            from: `${chartId}_chart`,
+            to: actionName,
+            relationType: 'contains',
+            metadata: { createdAt: timestamp }
+          },
+          {
+            from: actionName,
+            to: `${chartId}_desired_outcome`,
+            relationType: 'advances_toward',
+            metadata: { createdAt: timestamp }
+          }
+        );
+      });
+    }
+
+    // Save to graph
+    await this.createEntities(entities);
+    await this.createRelations(relations);
+
+    return { chartId, entities, relations };
+  }
+
+  async telescopeActionStep(
+    actionStepName: string,
+    newCurrentReality: string
+  ): Promise<{ chartId: string; parentChart: string }> {
+    const graph = await this.loadGraph();
+    const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
+    
+    if (!actionStep || !actionStep.metadata?.chartId) {
+      throw new Error(`Action step ${actionStepName} not found or not properly configured`);
+    }
+
+    const parentChartId = actionStep.metadata.chartId;
+    const inheritedDueDate = actionStep.metadata.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const desiredOutcome = actionStep.observations[0]; // Use the action step description as the new desired outcome
+
+    const result = await this.createStructuralTensionChart(
+      desiredOutcome,
+      newCurrentReality,
+      inheritedDueDate
+    );
+
+    // Update the new chart's metadata to reflect telescoping relationship
+    const newChart = await this.loadGraph();
+    const chartEntity = newChart.entities.find(e => e.name === `${result.chartId}_chart`);
+    if (chartEntity && chartEntity.metadata) {
+      chartEntity.metadata.parentChart = parentChartId;
+      chartEntity.metadata.parentActionStep = actionStepName;
+      chartEntity.metadata.level = (actionStep.metadata.level || 0) + 1;
+      chartEntity.metadata.updatedAt = new Date().toISOString();
+    }
+
+    await this.saveGraph(newChart);
+
+    return { chartId: result.chartId, parentChart: parentChartId };
+  }
+
+  async markActionStepComplete(actionStepName: string): Promise<void> {
+    const graph = await this.loadGraph();
+    const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
+    
+    if (!actionStep) {
+      throw new Error(`Action step ${actionStepName} not found`);
+    }
+
+    // Mark as complete
+    if (actionStep.metadata) {
+      actionStep.metadata.completionStatus = true;
+      actionStep.metadata.updatedAt = new Date().toISOString();
+    }
+
+    // Flow into current reality - find the current reality of the same chart
+    if (actionStep.metadata?.chartId) {
+      const currentReality = graph.entities.find(e => 
+        e.name === `${actionStep.metadata!.chartId}_current_reality` && 
+        e.entityType === 'current_reality'
+      );
+      
+      if (currentReality) {
+        currentReality.observations.push(`Completed: ${actionStep.observations[0]}`);
+        if (currentReality.metadata) {
+          currentReality.metadata.updatedAt = new Date().toISOString();
+        }
+      }
+    }
+
+    await this.saveGraph(graph);
+  }
+
+  async getChartProgress(chartId: string): Promise<{
+    chartId: string;
+    progress: number;
+    completedActions: number;
+    totalActions: number;
+    nextAction?: string;
+    dueDate?: string;
+  }> {
+    const graph = await this.loadGraph();
+    const actionSteps = graph.entities.filter(e => 
+      e.entityType === 'action_step' && 
+      e.metadata?.chartId === chartId
+    );
+
+    const completedActions = actionSteps.filter(e => e.metadata?.completionStatus === true).length;
+    const totalActions = actionSteps.length;
+    const progress = totalActions > 0 ? completedActions / totalActions : 0;
+
+    // Find next incomplete action step with earliest due date
+    const incompleteActions = actionSteps
+      .filter(e => e.metadata?.completionStatus !== true)
+      .sort((a, b) => {
+        const dateA = new Date(a.metadata?.dueDate || '').getTime();
+        const dateB = new Date(b.metadata?.dueDate || '').getTime();
+        return dateA - dateB;
+      });
+
+    const chart = graph.entities.find(e => e.name === `${chartId}_chart`);
+
+    return {
+      chartId,
+      progress,
+      completedActions,
+      totalActions,
+      nextAction: incompleteActions[0]?.name,
+      dueDate: chart?.metadata?.dueDate
+    };
+  }
+
+  private distributeActionStepDates(startDate: Date, endDate: Date, stepCount: number): Date[] {
+    const totalTime = endDate.getTime() - startDate.getTime();
+    const stepInterval = totalTime / (stepCount + 1); // +1 to leave space before final due date
+    
+    const dates: Date[] = [];
+    for (let i = 1; i <= stepCount; i++) {
+      dates.push(new Date(startDate.getTime() + (stepInterval * i)));
+    }
+    
+    return dates;
+  }
+
+  async listActiveCharts(): Promise<Array<{
+    chartId: string;
+    desiredOutcome: string;
+    dueDate?: string;
+    progress: number;
+    completedActions: number;
+    totalActions: number;
+    level: number;
+    parentChart?: string;
+  }>> {
+    const graph = await this.loadGraph();
+    const charts = graph.entities.filter(e => e.entityType === 'structural_tension_chart');
+    
+    const chartSummaries = await Promise.all(
+      charts.map(async (chart) => {
+        const chartId = chart.metadata?.chartId || chart.name.replace('_chart', '');
+        const progress = await this.getChartProgress(chartId);
+        
+        // Get desired outcome
+        const desiredOutcome = graph.entities.find(e => 
+          e.name === `${chartId}_desired_outcome` && e.entityType === 'desired_outcome'
+        );
+        
+        return {
+          chartId,
+          desiredOutcome: desiredOutcome?.observations[0] || 'Unknown outcome',
+          dueDate: chart.metadata?.dueDate,
+          progress: progress.progress,
+          completedActions: progress.completedActions,
+          totalActions: progress.totalActions,
+          level: chart.metadata?.level || 0,
+          parentChart: chart.metadata?.parentChart
+        };
+      })
+    );
+
+    return chartSummaries.sort((a, b) => {
+      // Sort by level first (master charts first), then by due date
+      if (a.level !== b.level) return a.level - b.level;
+      
+      const dateA = new Date(a.dueDate || '').getTime();
+      const dateB = new Date(b.dueDate || '').getTime();
+      return dateA - dateB;
+    });
+  }
 }
 
 const knowledgeGraphManager = new KnowledgeGraphManager();
@@ -194,8 +493,8 @@ const knowledgeGraphManager = new KnowledgeGraphManager();
 
 // The server instance and tools exposed to AI models
 const server = new Server({
-  name: "mcp-knowledge-graph",
-  version: "1.0.1",
+  name: "coaia-memory",
+  version: "2.0.0",
 },    {
     capabilities: {
       tools: {},
@@ -375,6 +674,67 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["names"],
         },
       },
+      {
+        name: "create_structural_tension_chart",
+        description: "Create a new structural tension chart with desired outcome, current reality, and optional action steps",
+        inputSchema: {
+          type: "object",
+          properties: {
+            desiredOutcome: { type: "string", description: "What you want to create or achieve" },
+            currentReality: { type: "string", description: "Your current situation in relation to the desired outcome" },
+            dueDate: { type: "string", description: "When you want to achieve this outcome (ISO date string)" },
+            actionSteps: {
+              type: "array",
+              items: { type: "string" },
+              description: "Optional list of action steps needed to achieve the outcome",
+              optional: true
+            }
+          },
+          required: ["desiredOutcome", "currentReality", "dueDate"]
+        }
+      },
+      {
+        name: "telescope_action_step",
+        description: "Break down an action step into a detailed structural tension chart",
+        inputSchema: {
+          type: "object",
+          properties: {
+            actionStepName: { type: "string", description: "Name of the action step to telescope" },
+            newCurrentReality: { type: "string", description: "Current reality specific to this action step" }
+          },
+          required: ["actionStepName", "newCurrentReality"]
+        }
+      },
+      {
+        name: "mark_action_complete",
+        description: "Mark an action step as completed and update current reality",
+        inputSchema: {
+          type: "object",
+          properties: {
+            actionStepName: { type: "string", description: "Name of the completed action step" }
+          },
+          required: ["actionStepName"]
+        }
+      },
+      {
+        name: "get_chart_progress",
+        description: "Get progress information for a structural tension chart",
+        inputSchema: {
+          type: "object",
+          properties: {
+            chartId: { type: "string", description: "ID of the chart to check progress for" }
+          },
+          required: ["chartId"]
+        }
+      },
+      {
+        name: "list_active_charts",
+        description: "List all active structural tension charts with their progress",
+        inputSchema: {
+          type: "object",
+          properties: {}
+        }
+      }
     ],
   };
 });
@@ -408,6 +768,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.searchNodes(args.query as string), null, 2) }] };
     case "open_nodes":
       return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.openNodes(args.names as string[]), null, 2) }] };
+    case "create_structural_tension_chart":
+      const chartResult = await knowledgeGraphManager.createStructuralTensionChart(
+        args.desiredOutcome as string,
+        args.currentReality as string,
+        args.dueDate as string,
+        args.actionSteps as string[]
+      );
+      return { content: [{ type: "text", text: JSON.stringify(chartResult, null, 2) }] };
+    case "telescope_action_step":
+      const telescopeResult = await knowledgeGraphManager.telescopeActionStep(
+        args.actionStepName as string,
+        args.newCurrentReality as string
+      );
+      return { content: [{ type: "text", text: JSON.stringify(telescopeResult, null, 2) }] };
+    case "mark_action_complete":
+      await knowledgeGraphManager.markActionStepComplete(args.actionStepName as string);
+      return { content: [{ type: "text", text: `Action step '${args.actionStepName}' marked as complete and current reality updated` }] };
+    case "get_chart_progress":
+      const progressResult = await knowledgeGraphManager.getChartProgress(args.chartId as string);
+      return { content: [{ type: "text", text: JSON.stringify(progressResult, null, 2) }] };
+    case "list_active_charts":
+      const chartsResult = await knowledgeGraphManager.listActiveCharts();
+      return { content: [{ type: "text", text: JSON.stringify(chartsResult, null, 2) }] };
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -416,7 +799,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Knowledge Graph MCP Server running on stdio");
+  console.error("COAIA Memory - Creative Oriented AI Assistant Memory Server running on stdio");
 }
 
 main().catch((error) => {

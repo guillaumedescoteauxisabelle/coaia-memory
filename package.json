@@ -1,14 +1,18 @@
 {
-  "name": "mcp-knowledge-graph-mia",
-  "version": "1.0.3",
-  "description": "Mia's MCP server enabling persistent memory for AI models through a local knowledge graph",
+  "name": "coaia-memory",
+  "version": "2.0.0",
+  "description": "Creative-Oriented AI Assistant Memory - MCP server with structural tension charts and advancing pattern support, based on principles by Robert Fritz",
   "license": "MIT",
-  "author": "Shane Holloman",
+  "author": "J.Guillaume D.-Isabelle <jgi@jgwill.com> (https://github.com/jgwill)",
+  "contributors": [
+    "Shane Holloman (original mcp-knowledge-graph foundation)",
+    "Robert Fritz (structural tension methodology - https://robertfritz.com)"
+  ],
   "homepage": "https://github.com/miadisabelle/mcp-knowledge-graph",
   "bugs": "https://github.com/miadisabelle/mcp-knowledge-graph/issues",
   "type": "module",
   "bin": {
-    "mcp-knowledge-graph": "dist/index.js"
+    "coaia-memory": "dist/index.js"
   },
   "files": [
     "dist"
