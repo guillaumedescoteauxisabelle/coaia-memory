@@ -14,6 +14,120 @@ import { isAbsolute } from 'path';
 
 // Parse args and handle paths safely
 const argv = minimist(process.argv.slice(2));
+
+// Handle help command
+if (argv.help || argv.h) {
+  console.log(`
+🧠 COAIA Memory - Creative-Oriented AI Assistant Memory System v2.0.0
+   Based on Robert Fritz's Structural Tension methodology
+
+DESCRIPTION:
+   MCP server that extends knowledge graphs with structural tension charts for 
+   creative-oriented memory management. Supports advancing patterns, telescoping
+   charts, and natural language interaction for AI assistants.
+
+USAGE:
+   coaia-memory [OPTIONS]
+   npx coaia-memory [OPTIONS]
+
+OPTIONS:
+   --memory-path PATH    Custom path for memory storage (default: ./memory.jsonl)
+   --help, -h           Show this help message
+
+CORE FEATURES:
+   
+   📊 Structural Tension Charts
+   • Create charts with desired outcomes, current reality, and action steps
+   • Automatic due date distribution for strategic timing
+   • Progress tracking and completion monitoring
+   
+   🔭 Telescoping Support  
+   • Break down action steps into detailed sub-charts
+   • Proper due date inheritance from parent steps
+   • Navigate between overview and details seamlessly
+   
+   📈 Advancing Patterns
+   • Completed actions flow into current reality automatically  
+   • Success builds momentum for continued advancement
+   • Prevents oscillating patterns through structural awareness
+
+MCP TOOLS AVAILABLE:
+   
+   Chart Management:
+   • create_structural_tension_chart - Create new chart with outcome & reality
+   • telescope_action_step          - Break down steps into detailed charts
+   • mark_action_complete           - Complete actions & update reality
+   • get_chart_progress            - Monitor chart advancement
+   • list_active_charts            - Overview of all active charts
+   
+   Knowledge Graph (Traditional):
+   • create_entities               - Add entities (people, concepts, events)
+   • create_relations              - Connect entities with relationships  
+   • add_observations              - Record information about entities
+   • search_nodes                  - Search across all stored information
+   • read_graph                    - Export complete graph structure
+
+EXAMPLE USAGE:
+
+   # Start with custom memory path
+   coaia-memory --memory-path /path/to/my-charts.jsonl
+   
+   # Use in Claude Desktop (add to claude_desktop_config.json):
+   {
+     "mcpServers": {
+       "coaia-memory": {
+         "command": "npx", 
+         "args": ["-y", "coaia-memory", "--memory-path", "./charts.jsonl"]
+       }
+     }
+   }
+
+NATURAL LANGUAGE PATTERNS:
+
+   Creating Charts:
+   "I want to create a mobile app in 3 months"
+   "My desired outcome is to establish a morning routine"
+   
+   Progress Tracking:
+   "I completed the research phase yesterday"  
+   "Show me progress on my Python learning goal"
+   
+   Telescoping:
+   "Break down the Django tutorial step further"
+   "I need more detail on the deployment action"
+
+CREATIVE ORIENTATION PRINCIPLES:
+
+   ✅ Focus on Creation (not problem-solving):
+      • "I want to create..." vs "I need to fix..."
+      • "My desired outcome..." vs "The problem is..."
+   
+   ✅ Structural Tension Awareness:
+      • Always pair desired outcomes with current reality
+      • Honest assessment creates productive tension
+      • Action steps bridge the gap between where you are and want to be
+   
+   ✅ Advancing Patterns:
+      • Success builds on success
+      • Completed actions become part of current reality
+      • Momentum creates natural progression toward goals
+
+PHILOSOPHY:
+   COAIA Memory recognizes that structure determines behavior. By organizing
+   memory around structural tension rather than problem-solving patterns, it
+   naturally supports creative advancement and helps build the life you want.
+
+CREDITS:
+   • Author: J.Guillaume D.-Isabelle <jgi@jgwill.com>
+   • Methodology: Robert Fritz - https://robertfritz.com
+   • Foundation: Shane Holloman (original mcp-knowledge-graph)
+   • License: MIT
+
+For more information, see: CLAUDE.md in the package directory
+`);
+  process.exit(0);
+}
+
 let memoryPath = argv['memory-path'];
 
 // If a custom path is provided, ensure it's absolute
