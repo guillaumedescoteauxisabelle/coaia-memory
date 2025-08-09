@@ -115,7 +115,7 @@ CREATIVE ORIENTATION PRINCIPLES:
 PHILOSOPHY:
    COAIA Memory recognizes that structure determines behavior. By organizing
    memory around structural tension rather than problem-solving patterns, it
-   naturally supports creative advancement and helps build the life you want.
+   naturally forms a structure that advances and helps build, not just the life you want, but the technologies to supports it's manifestation (hopefully!).
 
 CREDITS:
    • Author: J.Guillaume D.-Isabelle <jgi@jgwill.com>
