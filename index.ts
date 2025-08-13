@@ -486,7 +486,8 @@ class KnowledgeGraphManager {
       actionStep.metadata.updatedAt = new Date().toISOString();
     }
 
-    // Flow into current reality - find the current reality of the same chart
+    // Structural tension principle: completed action steps flow into current reality,
+    // changing the structural dynamic and advancing the system toward equilibrium
     if (actionStep.metadata?.chartId) {
       const currentReality = graph.entities.find(e => 
         e.name === `${actionStep.metadata!.chartId}_current_reality` && 
@@ -494,6 +495,8 @@ class KnowledgeGraphManager {
       );
       
       if (currentReality) {
+        // The completed action step becomes part of current reality, 
+        // creating new structural tension for continued advancement
         currentReality.observations.push(`Completed: ${actionStep.observations[0]}`);
         if (currentReality.metadata) {
           currentReality.metadata.updatedAt = new Date().toISOString();
