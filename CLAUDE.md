@@ -187,7 +187,9 @@ Action steps are **strategic secondary actions** - intermediary end results we c
 
 **Critical Distinction:**
 - ❌ **Gap-thinking**: "I need to bridge the gap between A and B"
-- ✅ **Structural tension**: "The unresolved tension between current reality A and desired outcome B naturally seeks resolution through strategic advancement"
+- ✅ **Structural tension**: "The unresolved tension between current reality A and desired outcome B naturally seeks resolution through strategic advancement".
+
+* SO DONT FUCKIN use any variations of "gap thinking" god damn it !  In fact, never fuckin use the word "gap".  Any natural system will want to be in a state of equilibrium, that is why the tension resolve, it is not a gap that gets filled, it is RESOLVED.
 
 ## Philosophy
 
