@@ -156,6 +156,17 @@ npm run build
 node test-coaia.js
 ```
 
+## Release Status
+
+**Current Version**: v2.0.0-rc.1 (Release Candidate)
+
+### ✅ Validated in RC
+- **Core Structural Tension Charts**: Fully functional with proper entity relationships
+- **Telescoping Support**: Action steps break down into sub-charts with due date inheritance
+- **Advancing Pattern Tracking**: Completions flow into current reality, system advances naturally
+- **MCP Integration**: All tools working correctly in Claude Code CLI environment
+- **Real-World Testing**: Validated with actual user interactions in test environment
+
 ### Next Milestone
 **Guided Chart Creation**: Transform from passive storage to active coaching system that helps users create meaningful structural tension charts with proper creative orientation validation.
 
