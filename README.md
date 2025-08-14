@@ -1,271 +1,202 @@
-# `mcp-knowledge-graph-mia`
+# COAIA Memory - Creative-Oriented AI Assistant Memory System
 
-> Knowledge Graph Memory Server
+> MCP server implementing structural tension charts and advancing pattern support based on Robert Fritz's creative methodology
 
-An improved implementation of persistent memory using a local knowledge graph with a customizable `--memory-path`.
+## What is COAIA Memory?
 
-This lets AI models remember information about the user across chats. It works with any AI model that supports the Model Context Protocol (MCP) or function calling capabilities.
+COAIA Memory extends traditional knowledge graphs with **structural tension charts** - a powerful framework for organizing creative processes around desired outcomes rather than problem-solving. Based on Robert Fritz's structural tension methodology, it helps AI assistants maintain creative orientation and support advancing patterns.
 
-> [!NOTE]
-> This is a fork of the original [Memory Server](https://github.com/modelcontextprotocol/servers/tree/main/src/memory) and is intended to not use the ephemeral memory npx installation method.
+**Current Version**: v2.0.0-rc.1 (Release Candidate)
 
-## Server Name
+## Key Features
 
-```txt
-mcp-knowledge-graph-mia
+### 🎯 Structural Tension Charts
+- **Desired Outcomes**: Clear, specific results you want to create
+- **Current Reality**: Honest assessment of where you are now  
+- **Structural Tension**: The unresolved tension between current reality and desired outcome that naturally seeks resolution
+- **Action Steps**: Strategic secondary actions - intermediary end results that advance toward the primary goal
+- **Due Dates**: Time organization that creates momentum
+
+### 🔭 Telescoping Support
+- Break down complex action steps into detailed sub-charts
+- Proper due date inheritance from parent steps
+- Hierarchical navigation between overview and details
+- Maintains structural tension at every level
+
+### 📈 Advancing Pattern Tracking
+- Completed action steps become part of current reality, changing the structural dynamic
+- Each completion advances the system toward equilibrium (desired outcome)
+- Success creates new structural tension for continued advancement
+- Prevents oscillating patterns through proper structural design
+
+### 🗣️ Natural Language Ready
+- Conversational patterns documented for intuitive interaction
+- Creative-oriented language (focus on creation vs problem-solving)
+- AI assistants can guide users through structural tension exercises
+
+### 🔗 Traditional Knowledge Graph
+- Full entity, relation, and observation management
+- Search and retrieval capabilities
+- Compatible with existing MCP knowledge graph workflows
+
+## Installation & Usage
+
+### As NPX Package
+```bash
+npx coaia-memory --memory-path ./my-charts.jsonl
 ```
 
-![screen-of-server-name](https://raw.githubusercontent.com/miadisabelle/mcp-knowledge-graph/main/img/server-name.png)
-
-![read-function](https://raw.githubusercontent.com/miadisabelle/mcp-knowledge-graph/main/img/read-function.png)
-
-## Core Concepts
-
-### Entities
-
-Entities are the primary nodes in the knowledge graph. Each entity has:
-
-- A unique name (identifier)
-- An entity type (e.g., "person", "organization", "event")
-- A list of observations
-
-Example:
-
+### In Claude Desktop Config
 ```json
 {
-  "name": "John_Smith",
-  "entityType": "person",
-  "observations": ["Speaks fluent Spanish"]
+  "mcpServers": {
+    "coaia-memory": {
+      "command": "npx",
+      "args": ["-y", "coaia-memory", "--memory-path", "/path/to/your/charts.jsonl"],
+      "autoapprove": [
+        "create_structural_tension_chart",
+        "telescope_action_step", 
+        "mark_action_complete",
+        "get_chart_progress",
+        "list_active_charts",
+        "create_entities",
+        "create_relations",
+        "add_observations"
+      ]
+    }
+  }
 }
 ```
 
-### Relations
-
-Relations define directed connections between entities. They are always stored in active voice and describe how entities interact or relate to each other.
-
-Example:
-
-```json
-{
-  "from": "John_Smith",
-  "to": "ExampleCorp",
-  "relationType": "works_at"
-}
+### Local Development
+```bash
+git clone <repository>
+cd coaia-memory
+npm install
+npm run build
 ```
 
-### Observations
+## Core Tools
 
-Observations are discrete pieces of information about an entity. They are:
+### Structural Tension Chart Management
+- `create_structural_tension_chart` - Create new chart with outcome, reality, and action steps
+- `telescope_action_step` - Break down action steps into detailed sub-charts
+- `mark_action_complete` - Complete actions and update current reality
+- `get_chart_progress` - Monitor chart advancement
+- `list_active_charts` - Overview of all active charts
 
-- Stored as strings
-- Attached to specific entities
-- Can be added or removed independently
-- Should be atomic (one fact per observation)
+### Traditional Knowledge Graph Operations
+- `create_entities` - Add new entities (people, concepts, events)
+- `create_relations` - Connect entities with relationships
+- `add_observations` - Record new information about entities
+- Plus full CRUD operations for entities, relations, and observations
 
-Example:
+## Example Usage
 
-```json
+### Creating a Chart
+```javascript
+// Natural language: "I want to learn Python web development in 6 weeks"
 {
-  "entityName": "John_Smith",
-  "observations": [
-    "Speaks fluent Spanish",
-    "Graduated in 2019",
-    "Prefers morning meetings"
+  "desiredOutcome": "Learn Python web development", 
+  "currentReality": "I know basic Python but no web frameworks",
+  "dueDate": "2025-09-15T00:00:00Z",
+  "actionSteps": [
+    "Complete Django tutorial",
+    "Build practice project", 
+    "Deploy something live"
   ]
 }
 ```
 
-## API
-
-### Tools
-
-- **create_entities**
-  - Create multiple new entities in the knowledge graph
-  - Input: `entities` (array of objects)
-    - Each object contains:
-      - `name` (string): Entity identifier
-      - `entityType` (string): Type classification
-      - `observations` (string[]): Associated observations
-  - Ignores entities with existing names
-
-- **create_relations**
-  - Create multiple new relations between entities
-  - Input: `relations` (array of objects)
-    - Each object contains:
-      - `from` (string): Source entity name
-      - `to` (string): Target entity name
-      - `relationType` (string): Relationship type in active voice
-  - Skips duplicate relations
-
-- **add_observations**
-  - Add new observations to existing entities
-  - Input: `observations` (array of objects)
-    - Each object contains:
-      - `entityName` (string): Target entity
-      - `contents` (string[]): New observations to add
-  - Returns added observations per entity
-  - Fails if entity doesn't exist
-
-- **delete_entities**
-  - Remove entities and their relations
-  - Input: `entityNames` (string[])
-  - Cascading deletion of associated relations
-  - Silent operation if entity doesn't exist
-
-- **delete_observations**
-  - Remove specific observations from entities
-  - Input: `deletions` (array of objects)
-    - Each object contains:
-      - `entityName` (string): Target entity
-      - `observations` (string[]): Observations to remove
-  - Silent operation if observation doesn't exist
-
-- **delete_relations**
-  - Remove specific relations from the graph
-  - Input: `relations` (array of objects)
-    - Each object contains:
-      - `from` (string): Source entity name
-      - `to` (string): Target entity name
-      - `relationType` (string): Relationship type
-  - Silent operation if relation doesn't exist
-
-- **read_graph**
-  - Read the entire knowledge graph
-  - No input required
-  - Returns complete graph structure with all entities and relations
-
-- **search_nodes**
-  - Search for nodes based on query
-  - Input: `query` (string)
-  - Searches across:
-    - Entity names
-    - Entity types
-    - Observation content
-  - Returns matching entities and their relations
-
-- **open_nodes**
-  - Retrieve specific nodes by name
-  - Input: `names` (string[])
-  - Returns:
-    - Requested entities
-    - Relations between requested entities
-  - Silently skips non-existent nodes
-
-## Usage with MCP-Compatible Platforms
-
-This server can be used with any AI platform that supports the Model Context Protocol (MCP) or function calling capabilities, including Claude, GPT, Llama, and others.
-
-### Setup with Claude Desktop
-
-Add this to your claude_desktop_config.json:
-
-```json
+### Telescoping Detail
+```javascript
+// Natural language: "Break down the Django tutorial step"
 {
-  "mcpServers": {
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-knowledge-graph-mia",
-        "--memory-path",
-        "/Users/shaneholloman/Dropbox/shane/db/memory.jsonl"
-      ],
-      "autoapprove": [
-        "create_entities",
-        "create_relations",
-        "add_observations",
-        "delete_entities",
-        "delete_observations",
-        "delete_relations",
-        "read_graph",
-        "search_nodes",
-        "open_nodes"
-      ]
-    },
-  }
+  "actionStepName": "chart_123_action_1",
+  "newCurrentReality": "Never used Django, familiar with Python basics"
 }
 ```
 
-### Setup with Other AI Platforms
-
-Any AI platform that supports function calling or the MCP standard can connect to this server. The specific configuration will depend on the platform, but the server exposes standard tools through the MCP interface.
-
-### Custom Memory Path
-
-You can specify a custom path for the memory file:
-
-```json
+### Tracking Progress
+```javascript
+// Natural language: "I finished the Django tutorial"
 {
-  "mcpServers": {
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-knowledge-graph-mia",
-        "--memory-path",
-        "/Users/shaneholloman/Dropbox/shane/db/memory.jsonl"
-      ],
-      "autoapprove": [
-        "create_entities",
-        "create_relations",
-        "add_observations",
-        "delete_entities",
-        "delete_observations",
-        "delete_relations",
-        "read_graph",
-        "search_nodes",
-        "open_nodes"
-      ]
-    },
-  }
+  "actionStepName": "chart_123_action_1"
 }
 ```
 
-If no path is specified, it will default to memory.jsonl in the server's installation directory.
+## Creative Orientation Principles
 
-### System Prompt
+### Focus on Creation, Not Problem-Solving
+- **Use**: "I want to create...", "My desired outcome is..."
+- **Avoid**: "I need to fix...", "The problem is...", "I want to stop..."
 
-The prompt for utilizing memory depends on the use case and the AI model you're using. Changing the prompt will help the model determine the frequency and types of memories created.
+### Structural Tension Awareness  
+- Always pair desired outcomes with current reality to create structural tension
+- This unresolved tension naturally seeks resolution through advancement
+- Action steps are strategic intermediary results that change the structural dynamic
+- Completed actions flow into current reality, creating new tension for continued advancement
 
-Here is an example prompt for chat personalization that can be adapted for any AI model. For Claude users, you could use this prompt in the "Custom Instructions" field of a [Claude.ai Project](https://www.anthropic.com/news/projects). For other models, adapt it to their respective instruction formats.
+### Advancing Patterns
+- Success builds on success
+- Completed actions become part of current reality
+- Momentum creates natural progression toward goals
 
-```txt
-Follow these steps for each interaction:
+## Development & Testing
 
-1. User Identification:
-   - You should assume that you are interacting with default_user
-   - If you have not identified default_user, proactively try to do so.
-
-2. Memory Retrieval:
-   - Always begin your chat by saying only "Remembering..." and retrieve all relevant information from your knowledge graph
-   - Always refer to your knowledge graph as your "memory"
-
-3. Memory Gathering:
-   - While conversing with the user, be attentive to any new information that falls into these categories:
-     a) Basic Identity (age, gender, location, job title, education level, etc.)
-     b) Behaviors (interests, habits, etc.)
-     c) Preferences (communication style, preferred language, etc.)
-     d) Goals (goals, targets, aspirations, etc.)
-     e) Relationships (personal and professional relationships up to 3 degrees of separation)
-
-4. Memory Update:
-   - If any new information was gathered during the interaction, update your memory as follows:
-     a) Create entities for recurring organizations, people, and significant events
-     b) Connect them to the current entities using relations
-     c) Store facts about them as observations
+### Build & Test
+```bash
+npm install
+npm run build
 ```
 
-## Integration with Other AI Models
+### Test Environment
+```bash
+cd test-environment
+claude-code  # Launch with pre-configured MCP setup
+```
 
-This server implements the Model Context Protocol (MCP) standard, making it compatible with any AI model that supports function calling. The knowledge graph structure and API are model-agnostic, allowing for flexible integration with various AI platforms.
+## Release Status
 
-To integrate with other models:
+### ✅ Validated in v2.0.0-rc.1
+- **Core Structural Tension Charts**: Fully functional with proper entity relationships
+- **Telescoping Support**: Action steps break down into sub-charts with due date inheritance
+- **Advancing Pattern Tracking**: Completions flow into current reality, system advances naturally
+- **MCP Integration**: All tools working correctly in Claude Code CLI environment
+- **Real-World Testing**: Validated with actual user interactions in test environment
 
-1. Configure the model to access the MCP server
-2. Ensure the model can make function calls to the exposed tools
-3. Adapt the system prompt to the specific model's instruction format
-4. Use the same knowledge graph operations regardless of the model
+### Next Milestone
+**Guided Chart Creation**: Transform from passive storage to active coaching system that helps users create meaningful structural tension charts with proper creative orientation validation.
 
-## License
+## Architecture
 
-This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
+### Enhanced Entity Types
+- `structural_tension_chart` - Container for chart components
+- `desired_outcome` - What you want to create
+- `current_reality` - Where you are now  
+- `action_step` - Strategic actions with due dates
+
+### Creative Relations
+- `creates_tension_with` - Between current reality and desired outcome
+- `advances_toward` - Action steps advancing toward outcomes
+- `telescopes_into` - Hierarchical chart relationships
+- `flows_into` - Completed actions updating reality
+
+### Metadata Support
+- Due dates and completion tracking
+- Chart hierarchy and telescoping relationships
+- Creative phases (germination, assimilation, completion)
+- Timestamps and progress metrics
+
+## Credits
+
+- **Author**: J.Guillaume D.-Isabelle <jgi@jgwill.com> (https://github.com/jgwill)
+- **Methodology**: Robert Fritz - Structural Tension (https://robertfritz.com)  
+- **Foundation**: Shane Holloman - Original MCP Knowledge Graph
+- **License**: MIT
+
+## Philosophy
+
+COAIA Memory embodies the principle that **structure determines behavior**. By organizing memory around structural tension rather than problem-solving patterns, it naturally supports creative advancement and helps users build the life they want to create.
+
+The system recognizes that structural tension is the fundamental organizing principle of the creative process - not a problem to be solved, but a generative force to be harnessed.
