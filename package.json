@@ -17,6 +17,14 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "assistant",
+    "memory",
+    "MCP",
+    "knowledge graph",
+    "structural tension",
+    "creative"
+  ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
     "prepare": "npm run build",
