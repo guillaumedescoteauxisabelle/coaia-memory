@@ -23,7 +23,9 @@
     "MCP",
     "knowledge graph",
     "structural tension",
-    "creative"
+    "creative",
+    "creative-orientation",
+    "structural-dynamics"
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
