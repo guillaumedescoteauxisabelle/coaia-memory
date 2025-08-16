@@ -6,7 +6,8 @@
       "Bash(npm install)",
       "Bash(npm version:*)",
       "Bash(npm publish:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm test)"
     ]
   },
   "enableAllProjectMcpServers": false
