@@ -10,5 +10,8 @@
       "Bash(npm test)"
     ]
   },
-  "enableAllProjectMcpServers": false
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "coaia-memory"
+  ]
 }

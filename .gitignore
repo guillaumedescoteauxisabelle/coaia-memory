@@ -75,3 +75,4 @@ VERSION_UPDATE.md
 ehthumbs.db
 Thumbs.db
 .hch
+.env*
