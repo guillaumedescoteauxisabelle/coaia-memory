@@ -8,6 +8,9 @@
       "Bash(npm publish:*)",
       "Bash(mkdir:*)",
       "Bash(npm test)"
+    ],
+    "additionalDirectories": [
+      "/media/jgi/F/Dropbox/jgt/edu/llm_mastery/arenas_250706/CreatingYourLifeCourse"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -440,7 +440,8 @@ class KnowledgeGraphManager {
 
   async telescopeActionStep(
     actionStepName: string,
-    newCurrentReality: string
+    newCurrentReality: string,
+    initialActionSteps?: string[]
   ): Promise<{ chartId: string; parentChart: string }> {
     const graph = await this.loadGraph();
     const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
@@ -456,7 +457,8 @@ class KnowledgeGraphManager {
     const result = await this.createStructuralTensionChart(
       desiredOutcome,
       newCurrentReality,
-      inheritedDueDate
+      inheritedDueDate,
+      initialActionSteps
     );
 
     // Update the new chart's metadata to reflect telescoping relationship
@@ -663,6 +665,109 @@ class KnowledgeGraphManager {
     }
 
     await this.saveGraph(graph);
+  }
+
+  async addActionStep(
+    parentChartId: string,
+    actionStepTitle: string,
+    dueDate?: string,
+    currentReality?: string
+  ): Promise<{ chartId: string; actionStepName: string }> {
+    const graph = await this.loadGraph();
+    const parentChart = graph.entities.find(e => 
+      e.entityType === 'structural_tension_chart' && e.metadata?.chartId === parentChartId
+    );
+    
+    if (!parentChart) {
+      throw new Error(`Parent chart ${parentChartId} not found`);
+    }
+
+    // Get parent chart's due date for auto-distribution
+    const parentDueDate = parentChart.metadata?.dueDate;
+    if (!parentDueDate) {
+      throw new Error(`Parent chart ${parentChartId} has no due date`);
+    }
+
+    // Calculate due date for action step if not provided
+    let actionStepDueDate = dueDate;
+    if (!actionStepDueDate) {
+      // Distribute between now and parent due date (simple midpoint for now)
+      const now = new Date();
+      const parentEnd = new Date(parentDueDate);
+      const midpoint = new Date(now.getTime() + (parentEnd.getTime() - now.getTime()) / 2);
+      actionStepDueDate = midpoint.toISOString();
+    }
+
+    // Set default current reality if not provided
+    const actionCurrentReality = currentReality || `Ready to begin: ${actionStepTitle}`;
+
+    // Create telescoped structural tension chart
+    const telescopedChart = await this.createStructuralTensionChart(
+      actionStepTitle,
+      actionCurrentReality, 
+      actionStepDueDate
+    );
+
+    // Update the telescoped chart's metadata to show parent relationship
+    const updatedGraph = await this.loadGraph();
+    const telescopedChartEntity = updatedGraph.entities.find(e => e.name === `${telescopedChart.chartId}_chart`);
+    if (telescopedChartEntity && telescopedChartEntity.metadata) {
+      telescopedChartEntity.metadata.parentChart = parentChartId;
+      telescopedChartEntity.metadata.level = (parentChart.metadata?.level || 0) + 1;
+      telescopedChartEntity.metadata.updatedAt = new Date().toISOString();
+    }
+
+    // Create relationship: telescoped chart advances toward parent's desired outcome
+    const parentDesiredOutcome = updatedGraph.entities.find(e => 
+      e.name === `${parentChartId}_desired_outcome` && e.entityType === 'desired_outcome'
+    );
+
+    if (parentDesiredOutcome) {
+      const timestamp = new Date().toISOString();
+      await this.createRelations([{
+        from: `${telescopedChart.chartId}_desired_outcome`,
+        to: parentDesiredOutcome.name,
+        relationType: 'advances_toward',
+        metadata: { createdAt: timestamp }
+      }]);
+    }
+
+    await this.saveGraph(updatedGraph);
+
+    return { 
+      chartId: telescopedChart.chartId, 
+      actionStepName: `${telescopedChart.chartId}_desired_outcome` 
+    };
+  }
+
+  async removeActionStep(parentChartId: string, actionStepName: string): Promise<void> {
+    const graph = await this.loadGraph();
+    
+    // Find the action step (which is actually a telescoped chart's desired outcome)
+    const actionStepEntity = graph.entities.find(e => e.name === actionStepName);
+    if (!actionStepEntity || !actionStepEntity.metadata?.chartId) {
+      throw new Error(`Action step ${actionStepName} not found`);
+    }
+
+    const telescopedChartId = actionStepEntity.metadata.chartId;
+    
+    // Verify it belongs to the parent chart
+    const telescopedChart = graph.entities.find(e => 
+      e.entityType === 'structural_tension_chart' && 
+      e.metadata?.chartId === telescopedChartId &&
+      e.metadata?.parentChart === parentChartId
+    );
+    
+    if (!telescopedChart) {
+      throw new Error(`Action step ${actionStepName} does not belong to chart ${parentChartId}`);
+    }
+
+    // Remove all entities belonging to the telescoped chart
+    const entitiesToRemove = graph.entities
+      .filter(e => e.metadata?.chartId === telescopedChartId)
+      .map(e => e.name);
+
+    await this.deleteEntities(entitiesToRemove);
   }
 }
 
@@ -873,12 +978,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "telescope_action_step",
-        description: "Break down an action step into a detailed structural tension chart",
+        description: "Break down an action step into a detailed structural tension chart with optional initial action steps",
         inputSchema: {
           type: "object",
           properties: {
             actionStepName: { type: "string", description: "Name of the action step to telescope" },
-            newCurrentReality: { type: "string", description: "Current reality specific to this action step" }
+            newCurrentReality: { type: "string", description: "Current reality specific to this action step" },
+            initialActionSteps: {
+              type: "array",
+              items: { type: "string" },
+              description: "Optional list of initial action steps for the telescoped chart",
+              optional: true
+            }
           },
           required: ["actionStepName", "newCurrentReality"]
         }
@@ -945,6 +1056,40 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["chartId", "newObservations"]
         }
+      },
+      {
+        name: "add_action_step",
+        description: "Add a strategic action step to an existing structural tension chart (creates telescoped chart)",
+        inputSchema: {
+          type: "object", 
+          properties: {
+            parentChartId: { type: "string", description: "ID of the parent chart to add the action step to" },
+            actionStepTitle: { type: "string", description: "Title of the action step (becomes desired outcome of telescoped chart)" },
+            dueDate: { 
+              type: "string", 
+              description: "Optional due date for the action step (ISO string). If not provided, auto-distributed between now and parent due date",
+              optional: true
+            },
+            currentReality: {
+              type: "string",
+              description: "Optional current reality specific to this action step. If not provided, defaults to 'Ready to begin: [title]'",
+              optional: true
+            }
+          },
+          required: ["parentChartId", "actionStepTitle"]
+        }
+      },
+      {
+        name: "remove_action_step", 
+        description: "Remove an action step from a structural tension chart (deletes telescoped chart)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            parentChartId: { type: "string", description: "ID of the parent chart containing the action step" },
+            actionStepName: { type: "string", description: "Name of the action step to remove (telescoped chart's desired outcome name)" }
+          },
+          required: ["parentChartId", "actionStepName"]
+        }
       }
     ],
   };
@@ -990,7 +1135,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "telescope_action_step":
       const telescopeResult = await knowledgeGraphManager.telescopeActionStep(
         args.actionStepName as string,
-        args.newCurrentReality as string
+        args.newCurrentReality as string,
+        args.initialActionSteps as string[]
       );
       return { content: [{ type: "text", text: JSON.stringify(telescopeResult, null, 2) }] };
     case "mark_action_complete":
@@ -1015,6 +1161,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         args.newObservations as string[]
       );
       return { content: [{ type: "text", text: `Current reality updated for chart '${args.chartId}'` }] };
+    case "add_action_step":
+      const addActionResult = await knowledgeGraphManager.addActionStep(
+        args.parentChartId as string,
+        args.actionStepTitle as string,
+        args.dueDate as string,
+        args.currentReality as string
+      );
+      return { content: [{ type: "text", text: `Action step '${args.actionStepTitle}' added to chart '${args.parentChartId}' as telescoped chart '${addActionResult.chartId}'` }] };
+    case "remove_action_step":
+      await knowledgeGraphManager.removeActionStep(
+        args.parentChartId as string,
+        args.actionStepName as string
+      );
+      return { content: [{ type: "text", text: `Action step '${args.actionStepName}' removed from chart '${args.parentChartId}'` }] };
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
