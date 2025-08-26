@@ -53,14 +53,19 @@ CORE FEATURES:
 
 MCP TOOLS AVAILABLE:
    
-   Chart Management:
-   • create_structural_tension_chart - Create new chart with outcome & reality
-   • telescope_action_step          - Break down steps into detailed charts
-   • mark_action_complete           - Complete actions & update reality
-   • get_chart_progress            - Monitor chart advancement
-   • list_active_charts            - Overview of all active charts
+   Chart Management (Common Workflow):
+   • list_active_charts            - START HERE: See all charts and their progress
+   • add_action_step               - Add strategic actions to existing charts  
+   • telescope_action_step         - Break down action steps into detailed sub-charts
    • update_action_progress        - Track progress without completing actions
+   • mark_action_complete          - Complete actions & update reality
    • update_current_reality        - Add observations directly to current reality
+   • create_structural_tension_chart - Create new chart with outcome & reality
+   
+   Chart Analysis (Advanced):
+   • get_chart_progress            - Detailed progress (redundant after list_active_charts)
+   • open_nodes                    - Inspect specific chart components by exact name
+   • read_graph                    - Dump all data (rarely needed)
    
    Knowledge Graph (Traditional):
    • create_entities               - Add entities (people, concepts, events)
@@ -925,7 +930,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "read_graph",
-        description: "Read the entire knowledge graph",
+        description: "RARELY USED: Dumps entire knowledge graph (all entities and relations). Only use for debugging or when you need to see ALL data. For chart work, use list_active_charts instead.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -944,14 +949,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "open_nodes",
-        description: "Open specific nodes in the knowledge graph by their names",
+        description: "ADVANCED: Open specific entity nodes by exact name (e.g. 'chart_123_current_reality'). Only use if you need to inspect specific chart components. NOT for general chart viewing - use list_active_charts instead.",
         inputSchema: {
           type: "object",
           properties: {
             names: {
               type: "array",
               items: { type: "string" },
-              description: "An array of entity names to retrieve",
+              description: "An array of exact entity names to retrieve (e.g. 'chart_123_desired_outcome')",
             },
           },
           required: ["names"],
@@ -1007,7 +1012,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_chart_progress",
-        description: "Get progress information for a structural tension chart",
+        description: "Get detailed progress for a specific chart (redundant if you just used list_active_charts which shows progress). Only use if you need the nextAction details.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1018,7 +1023,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "list_active_charts",
-        description: "List all active structural tension charts with their progress",
+        description: "List all active structural tension charts with their progress. Use this FIRST to see all charts and their IDs. This shows chart overview with progress - you don't need other tools after this for basic chart information.",
         inputSchema: {
           type: "object",
           properties: {}
