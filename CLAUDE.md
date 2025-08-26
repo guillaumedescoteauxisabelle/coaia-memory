@@ -215,7 +215,7 @@ Action steps are **strategic secondary actions** - intermediary end results we c
 - This changes the structural tension (new current reality, same desired outcome)
 - The system naturally advances toward the next action step
 - Success creates new structural tension for continued advancement
-- This prevents oscillation and creates genuine forward momentum
+- This prevents oscillation and creates genuine forward momentum (NOTE: Claude used "PREVENTS" which in itself, this whole usage of words like that makes it scary and potentially dangerous, we are not preventing anything, we are creating a natural system that wants to be in equilibrium, therefore, we volontarily create the desequilibrium. Saying we prevent 'oscillation' is like saying that problem-solving doesn't have its place, it does, it is just not creating....Also, the addition of 'genuine' is useless and does not add any values, it is just fluff, question yourself: 'is there a forward momentum that is not genuine?')
 
 **Critical Distinction:**
 - ❌ **Gap-thinking**: "I need to bridge the gap between A and B"
