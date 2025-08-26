@@ -69,6 +69,8 @@ npx coaia-memory --memory-path ./my-charts.jsonl
 - `mark_action_complete` - Complete actions and update current reality
 - `get_chart_progress` - Monitor chart advancement
 - `list_active_charts` - Overview of all active charts
+- `update_action_progress` - Track progress on actions without marking complete
+- `update_current_reality` - Add observations directly to current reality
 
 ### Traditional Knowledge Graph
 - `create_entities` - Add new entities (people, concepts, events)
@@ -107,6 +109,25 @@ npx coaia-memory --memory-path ./my-charts.jsonl
 // Natural language: "I finished the Django tutorial"
 {
   "actionStepName": "chart_123_action_1"
+}
+```
+
+### Progress Updates (NEW Enhancement)
+```javascript
+// Natural language: "I'm halfway through the Django tutorial - completed models section"
+{
+  "actionStepName": "chart_123_action_1",
+  "progressObservation": "Completed Django models section, working on views",
+  "updateCurrentReality": true  // Optional: also update current reality
+}
+```
+
+### Current Reality Updates (NEW Enhancement)
+```javascript
+// Natural language: "External conditions changed - new requirement discovered"
+{
+  "chartId": "chart_123",
+  "newObservations": ["New client requirement for mobile responsiveness", "Timeline extended by 2 weeks"]
 }
 ```
 
@@ -201,6 +222,41 @@ Action steps are **strategic secondary actions** - intermediary end results we c
 - ✅ **Structural tension**: "The unresolved tension between current reality A and desired outcome B naturally seeks resolution through strategic advancement".
 
 * SO DONT FUCKIN use any variations of "gap thinking" god damn it !  In fact, never fuckin use the word "gap".  Any natural system will want to be in a state of equilibrium, that is why the tension resolve, it is not a gap that gets filled, it is RESOLVED.
+
+## Progress-Based Reality Updates (v2.1.0 Enhancement)
+
+The enhancement adds **journey-aware tracking** to structural tension charts, recognizing that reality changes through engagement with action steps, not just their completion.
+
+### Key Innovation: Process-Oriented Tracking
+- **Traditional approach**: Reality only updates when actions complete
+- **Enhanced approach**: Reality updates throughout the advancement journey
+
+### New Capabilities:
+
+**Progress Without Completion:**
+```javascript
+update_action_progress({
+  actionStepName: "learn_django",
+  progressObservation: "Completed models and views, struggling with templates",
+  updateCurrentReality: true
+})
+```
+
+**External Reality Changes:**
+```javascript
+update_current_reality({
+  chartId: "chart_123", 
+  newObservations: ["New requirement discovered", "Timeline extended"]
+})
+```
+
+### Structural Benefits:
+1. **Continuous Tension Updates**: Progress observations flow into current reality, keeping structural tension dynamic and accurate
+2. **Advancement Awareness**: The system captures intermediate states, not just endpoints
+3. **External Integration**: Reality can be updated based on changes outside the action steps
+4. **Creative Flow**: Supports the natural, non-linear nature of creative processes
+
+This transforms COAIA Memory from **outcome-focused** to **journey-aware**, maintaining structural integrity throughout the creative advancement process.
 
 ## Philosophy
 

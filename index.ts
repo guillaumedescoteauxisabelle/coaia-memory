@@ -18,7 +18,7 @@ const argv = minimist(process.argv.slice(2));
 // Handle help command
 if (argv.help || argv.h) {
   console.log(`
-🧠 COAIA Memory - Creative-Oriented AI Assistant Memory System v2.0.0
+🧠 COAIA Memory - Creative-Oriented AI Assistant Memory System v2.1.0
    Based on Robert Fritz's Structural Tension methodology
 
 DESCRIPTION:
@@ -59,6 +59,8 @@ MCP TOOLS AVAILABLE:
    • mark_action_complete           - Complete actions & update reality
    • get_chart_progress            - Monitor chart advancement
    • list_active_charts            - Overview of all active charts
+   • update_action_progress        - Track progress without completing actions
+   • update_current_reality        - Add observations directly to current reality
    
    Knowledge Graph (Traditional):
    • create_entities               - Add entities (people, concepts, events)
@@ -670,7 +672,7 @@ const knowledgeGraphManager = new KnowledgeGraphManager();
 // The server instance and tools exposed to AI models
 const server = new Server({
   name: "coaia-memory",
-  version: "2.0.0",
+  version: "2.1.0",
 },    {
     capabilities: {
       tools: {},
