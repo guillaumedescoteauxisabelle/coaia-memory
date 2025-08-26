@@ -603,6 +603,65 @@ class KnowledgeGraphManager {
       return dateA - dateB;
     });
   }
+
+  async updateActionProgress(
+    actionStepName: string, 
+    progressObservation: string,
+    updateCurrentReality?: boolean
+  ): Promise<void> {
+    const graph = await this.loadGraph();
+    const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
+    
+    if (!actionStep) {
+      throw new Error(`Action step ${actionStepName} not found`);
+    }
+
+    // Add progress observation to action step
+    actionStep.observations.push(progressObservation);
+    if (actionStep.metadata) {
+      actionStep.metadata.updatedAt = new Date().toISOString();
+    }
+
+    // Optionally update current reality with progress
+    if (updateCurrentReality && actionStep.metadata?.chartId) {
+      const currentReality = graph.entities.find(e => 
+        e.name === `${actionStep.metadata!.chartId}_current_reality` && 
+        e.entityType === 'current_reality'
+      );
+      
+      if (currentReality) {
+        // Progress observations flow into current reality, changing the structural dynamic
+        currentReality.observations.push(`Progress on ${actionStep.observations[0]}: ${progressObservation}`);
+        if (currentReality.metadata) {
+          currentReality.metadata.updatedAt = new Date().toISOString();
+        }
+      }
+    }
+
+    await this.saveGraph(graph);
+  }
+
+  async updateCurrentReality(chartId: string, newObservations: string[]): Promise<void> {
+    const graph = await this.loadGraph();
+    const currentReality = graph.entities.find(e => 
+      e.name === `${chartId}_current_reality` && 
+      e.entityType === 'current_reality'
+    );
+    
+    if (!currentReality) {
+      throw new Error(`Chart ${chartId} not found or missing current reality`);
+    }
+
+    // Add new observations to current reality
+    const uniqueObservations = newObservations.filter(obs => !currentReality.observations.includes(obs));
+    currentReality.observations.push(...uniqueObservations);
+    
+    if (currentReality.metadata) {
+      currentReality.metadata.updatedAt = new Date().toISOString();
+    }
+
+    await this.saveGraph(graph);
+  }
 }
 
 const knowledgeGraphManager = new KnowledgeGraphManager();
@@ -851,6 +910,39 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {}
         }
+      },
+      {
+        name: "update_action_progress",
+        description: "Update progress on an action step without marking it complete, optionally updating current reality",
+        inputSchema: {
+          type: "object",
+          properties: {
+            actionStepName: { type: "string", description: "Name of the action step to update progress for" },
+            progressObservation: { type: "string", description: "Description of progress made on this action step" },
+            updateCurrentReality: { 
+              type: "boolean", 
+              description: "Whether to also add this progress to current reality (optional, defaults to false)",
+              optional: true
+            }
+          },
+          required: ["actionStepName", "progressObservation"]
+        }
+      },
+      {
+        name: "update_current_reality", 
+        description: "Add new observations directly to current reality of a structural tension chart",
+        inputSchema: {
+          type: "object",
+          properties: {
+            chartId: { type: "string", description: "ID of the chart to update current reality for" },
+            newObservations: {
+              type: "array",
+              items: { type: "string" },
+              description: "Array of new observations to add to current reality"
+            }
+          },
+          required: ["chartId", "newObservations"]
+        }
       }
     ],
   };
@@ -908,6 +1000,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "list_active_charts":
       const chartsResult = await knowledgeGraphManager.listActiveCharts();
       return { content: [{ type: "text", text: JSON.stringify(chartsResult, null, 2) }] };
+    case "update_action_progress":
+      await knowledgeGraphManager.updateActionProgress(
+        args.actionStepName as string,
+        args.progressObservation as string,
+        args.updateCurrentReality as boolean
+      );
+      return { content: [{ type: "text", text: `Action step '${args.actionStepName}' progress updated` }] };
+    case "update_current_reality":
+      await knowledgeGraphManager.updateCurrentReality(
+        args.chartId as string,
+        args.newObservations as string[]
+      );
+      return { content: [{ type: "text", text: `Current reality updated for chart '${args.chartId}'` }] };
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
