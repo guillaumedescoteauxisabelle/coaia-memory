@@ -672,6 +672,44 @@ class KnowledgeGraphManager {
     await this.saveGraph(graph);
   }
 
+  async updateDesiredOutcome(chartId: string, newDesiredOutcome: string): Promise<void> {
+    const graph = await this.loadGraph();
+    const desiredOutcomeEntity = graph.entities.find(e => 
+      e.name === `${chartId}_desired_outcome` && e.entityType === 'desired_outcome'
+    );
+    
+    if (!desiredOutcomeEntity) {
+      throw new Error(`Chart ${chartId} desired outcome not found`);
+    }
+
+    // Replace the first observation (which is the desired outcome text)
+    desiredOutcomeEntity.observations[0] = newDesiredOutcome;
+    
+    if (desiredOutcomeEntity.metadata) {
+      desiredOutcomeEntity.metadata.updatedAt = new Date().toISOString();
+    }
+
+    await this.saveGraph(graph);
+  }
+
+  async updateActionStepTitle(actionStepName: string, newTitle: string): Promise<void> {
+    const graph = await this.loadGraph();
+    const actionStepEntity = graph.entities.find(e => e.name === actionStepName);
+    
+    if (!actionStepEntity) {
+      throw new Error(`Action step ${actionStepName} not found`);
+    }
+
+    // Replace the first observation (which is the action step title)
+    actionStepEntity.observations[0] = newTitle;
+    
+    if (actionStepEntity.metadata) {
+      actionStepEntity.metadata.updatedAt = new Date().toISOString();
+    }
+
+    await this.saveGraph(graph);
+  }
+
   async addActionStep(
     parentChartId: string,
     actionStepTitle: string,
@@ -794,7 +832,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "create_entities",
-        description: "Create multiple new entities in the knowledge graph",
+        description: "ADVANCED: Create traditional knowledge graph entities. For structural tension charts, use create_structural_tension_chart or add_action_step instead.",
         inputSchema: {
           type: "object",
           properties: {
@@ -842,7 +880,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "add_observations",
-        description: "Add new observations to existing entities in the knowledge graph",
+        description: "ADVANCED: Add observations to traditional knowledge graph entities. For structural tension charts, use update_current_reality instead.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1048,7 +1086,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "update_current_reality", 
-        description: "Add new observations directly to current reality of a structural tension chart",
+        description: "FOR STRUCTURAL TENSION CHARTS: Add observations to current reality. DO NOT use add_observations or create_entities for chart work - use this instead.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1094,6 +1132,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             actionStepName: { type: "string", description: "Name of the action step to remove (telescoped chart's desired outcome name)" }
           },
           required: ["parentChartId", "actionStepName"]
+        }
+      },
+      {
+        name: "update_desired_outcome",
+        description: "Simple update of a chart's desired outcome (goal). Much easier than complex observation editing.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            chartId: { type: "string", description: "ID of the chart to update" },
+            newDesiredOutcome: { type: "string", description: "New desired outcome text" }
+          },
+          required: ["chartId", "newDesiredOutcome"]
+        }
+      },
+      {
+        name: "update_action_step_title",
+        description: "Simple update of an action step's title. Much easier than complex observation editing.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            actionStepName: { type: "string", description: "Name of the action step entity to update (e.g. 'chart_123_desired_outcome')" },
+            newTitle: { type: "string", description: "New action step title" }
+          },
+          required: ["actionStepName", "newTitle"]
         }
       }
     ],
@@ -1152,7 +1214,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return { content: [{ type: "text", text: JSON.stringify(progressResult, null, 2) }] };
     case "list_active_charts":
       const chartsResult = await knowledgeGraphManager.listActiveCharts();
-      return { content: [{ type: "text", text: JSON.stringify(chartsResult, null, 2) }] };
+      
+      // Format as hierarchical ASCII tree
+      let hierarchyText = "## Structural Tension Charts Hierarchy\n\n";
+      
+      // Group by master charts (level 0)
+      const masterCharts = chartsResult.filter(c => c.level === 0);
+      const actionCharts = chartsResult.filter(c => c.level > 0);
+      
+      masterCharts.forEach(master => {
+        const progress = master.progress > 0 ? ` (${Math.round(master.progress * 100)}% complete)` : "";
+        const dueDate = master.dueDate ? ` [Due: ${new Date(master.dueDate).toLocaleDateString()}]` : "";
+        
+        hierarchyText += `📋 **${master.desiredOutcome}** (Master Chart)${progress}${dueDate}\n`;
+        hierarchyText += `    ID: ${master.chartId}\n`;
+        
+        // Find action steps for this master chart
+        const actions = actionCharts.filter(a => a.parentChart === master.chartId);
+        
+        if (actions.length > 0) {
+          actions.forEach((action, index) => {
+            const isLast = index === actions.length - 1;
+            const connector = isLast ? "└── " : "├── ";
+            const actionProgress = action.progress > 0 ? ` (${Math.round(action.progress * 100)}%)` : "";
+            const actionDue = action.dueDate ? ` [${new Date(action.dueDate).toLocaleDateString()}]` : "";
+            
+            hierarchyText += `    ${connector}🎯 ${action.desiredOutcome} (Action Step)${actionProgress}${actionDue}\n`;
+            hierarchyText += `        ID: ${action.chartId}\n`;
+          });
+        } else {
+          hierarchyText += `    └── (No action steps yet)\n`;
+        }
+        hierarchyText += "\n";
+      });
+      
+      if (masterCharts.length === 0) {
+        hierarchyText += "No active structural tension charts found.\n\n";
+        hierarchyText += "💡 Create your first chart with: create_structural_tension_chart\n";
+      }
+      
+      return { content: [{ type: "text", text: hierarchyText }] };
     case "update_action_progress":
       await knowledgeGraphManager.updateActionProgress(
         args.actionStepName as string,
@@ -1180,6 +1281,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         args.actionStepName as string
       );
       return { content: [{ type: "text", text: `Action step '${args.actionStepName}' removed from chart '${args.parentChartId}'` }] };
+    case "update_desired_outcome":
+      await knowledgeGraphManager.updateDesiredOutcome(
+        args.chartId as string,
+        args.newDesiredOutcome as string
+      );
+      return { content: [{ type: "text", text: `Desired outcome updated for chart '${args.chartId}'` }] };
+    case "update_action_step_title":
+      await knowledgeGraphManager.updateActionStepTitle(
+        args.actionStepName as string,
+        args.newTitle as string
+      );
+      return { content: [{ type: "text", text: `Action step title updated for '${args.actionStepName}'` }] };
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
