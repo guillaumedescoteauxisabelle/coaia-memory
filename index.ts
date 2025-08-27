@@ -1012,8 +1012,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             actionSteps: {
               type: "array",
               items: { type: "string" },
-              description: "Optional list of action steps needed to achieve the outcome",
-              optional: true
+              description: "Optional list of action steps needed to achieve the outcome"
             }
           },
           required: ["desiredOutcome", "currentReality", "dueDate"]
@@ -1030,8 +1029,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             initialActionSteps: {
               type: "array",
               items: { type: "string" },
-              description: "Optional list of initial action steps for the telescoped chart",
-              optional: true
+              description: "Optional list of initial action steps for the telescoped chart"
             }
           },
           required: ["actionStepName", "newCurrentReality"]
@@ -1077,8 +1075,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             progressObservation: { type: "string", description: "Description of progress made on this action step" },
             updateCurrentReality: { 
               type: "boolean", 
-              description: "Whether to also add this progress to current reality (optional, defaults to false)",
-              optional: true
+              description: "Whether to also add this progress to current reality (optional, defaults to false)"
             }
           },
           required: ["actionStepName", "progressObservation"]
@@ -1110,13 +1107,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             actionStepTitle: { type: "string", description: "Title of the action step (becomes desired outcome of telescoped chart)" },
             dueDate: { 
               type: "string", 
-              description: "Optional due date for the action step (ISO string). If not provided, auto-distributed between now and parent due date",
-              optional: true
+              description: "Optional due date for the action step (ISO string). If not provided, auto-distributed between now and parent due date"
             },
             currentReality: {
               type: "string",
-              description: "Optional current reality specific to this action step. If not provided, defaults to 'Ready to begin: [title]'",
-              optional: true
+              description: "Optional current reality specific to this action step. If not provided, defaults to 'Ready to begin: [title]'"
             }
           },
           required: ["parentChartId", "actionStepTitle"]
