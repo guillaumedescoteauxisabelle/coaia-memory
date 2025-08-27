@@ -6,7 +6,7 @@
 
 COAIA Memory extends traditional knowledge graphs with **structural tension charts** - a powerful framework for organizing creative processes around desired outcomes rather than problem-solving. Based on Robert Fritz's structural tension methodology, it helps AI assistants maintain creative orientation and support advancing patterns.
 
-**Current Version**: v2.0.0-rc.1 (Release Candidate)
+**Current Version**: v2.2.3
 
 ## Key Features
 

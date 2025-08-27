@@ -179,7 +179,7 @@ node test-coaia.js
 
 ## Release Status
 
-**Current Version**: v2.0.0-rc.1 (Release Candidate)
+**Current Version**: v2.2.3
 
 ### ✅ Validated in RC
 - **Core Structural Tension Charts**: Fully functional with proper entity relationships

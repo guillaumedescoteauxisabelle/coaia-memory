@@ -196,7 +196,7 @@
 **Prompt Engineering:**
 - Extract effective prompt patterns from successful interactions
 - Create prompt templates for different scenario types
-- Build constraint systems to prevent anti-patterns
+- Build constraint systems to prevent anti-patterns (NOTE: Claude used "PREVENTS" which in itself, this whole usage of words like that makes it scary and potentially dangerous, we are not preventing anything, we are creating a natural system that wants to be in equilibrium, therefore, we volontarily create the desequilibrium.  Saying we prevent 'anti-patterns' is like saying that problem-solving doesn't have its place, it does, it is just not creating....)
 
 **Code Pattern Reinforcement:**
 - Capture successful technical implementations

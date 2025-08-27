@@ -820,7 +820,7 @@ const knowledgeGraphManager = new KnowledgeGraphManager();
 // The server instance and tools exposed to AI models
 const server = new Server({
   name: "coaia-memory",
-  version: "2.1.0",
+  version: "2.2.3",
 },    {
     capabilities: {
       tools: {},

@@ -5,6 +5,29 @@ All notable changes to COAIA Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3] - 2025-08-25
+
+### ✨ Enhancements
+
+- **Progress-Based Reality Updates (v2.1.0 Enhancement)**
+  - Added `update_action_progress` tool: Allows tracking progress on an action step without marking it complete, optionally updating current reality.
+  - Added `update_current_reality` tool: Enables adding external observations directly to a chart's current reality.
+  - Enhanced philosophical alignment: Supports "journey-aware" tracking, recognizing that reality changes throughout the creative process, not just upon completion.
+
+- **Expanded Chart Management Tools**
+  - Added `add_action_step` tool: Allows adding a strategic action step to an existing chart, which automatically creates a telescoped chart.
+  - Added `remove_action_step` tool: Enables removal of an action step (and its associated telescoped chart).
+  - Added `update_desired_outcome` tool: Provides a simple way to modify a chart's main goal.
+  - Added `update_action_step_title` tool: Allows simple modification of an action step's title.
+
+- **Improved User Experience**
+  - The `list_active_charts` tool now provides a clear, hierarchical ASCII tree view of all active charts, enhancing navigation and overview.
+  - Updated tool descriptions for traditional knowledge graph operations (`create_entities`, `add_observations`, `read_graph`, `open_nodes`) to guide users towards the new, more appropriate structural tension chart tools.
+
+### 🐛 Bug Fixes
+
+- Minor internal adjustments for version consistency and build stability.
+
 ## [2.0.0-rc.1] - 2025-08-14
 
 ### 🎯 Major Release Candidate - Structural Tension Charts
