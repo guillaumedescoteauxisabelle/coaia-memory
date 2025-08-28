@@ -483,32 +483,47 @@ class KnowledgeGraphManager {
 
   async markActionStepComplete(actionStepName: string): Promise<void> {
     const graph = await this.loadGraph();
-    const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
-    
+    // An "action step" can be a 'desired_outcome' of a sub-chart, or a simple 'action_step' entity.
+    const actionStep = graph.entities.find(e => e.observations.includes(actionStepName) && (e.entityType === 'action_step' || e.entityType === 'desired_outcome'));
+
     if (!actionStep) {
       throw new Error(`Action step ${actionStepName} not found`);
     }
 
-    // Mark as complete
+    const chartId = actionStep.metadata?.chartId;
+    if (!chartId) {
+      throw new Error(`Chart ID not found for action step ${actionStepName}`);
+    }
+
+    // Mark the action step itself as complete
     if (actionStep.metadata) {
       actionStep.metadata.completionStatus = true;
       actionStep.metadata.updatedAt = new Date().toISOString();
     }
 
-    // Structural tension principle: completed action steps flow into current reality,
-    // changing the structural dynamic and advancing the system toward equilibrium
-    if (actionStep.metadata?.chartId) {
-      const currentReality = graph.entities.find(e => 
-        e.name === `${actionStep.metadata!.chartId}_current_reality` && 
+    // Also mark the parent chart entity as complete
+    const chartEntity = graph.entities.find(e => e.name === `${chartId}_chart`);
+    if (chartEntity && chartEntity.metadata) {
+      chartEntity.metadata.completionStatus = true;
+      chartEntity.metadata.updatedAt = new Date().toISOString();
+    }
+
+    // Structural tension principle: completed action steps flow into the CURRENT REALITY
+    // of the PARENT chart, advancing the overall structure.
+    const parentChartId = chartEntity?.metadata?.parentChart;
+    if (parentChartId) {
+      const parentCurrentReality = graph.entities.find(e =>
+        e.name === `${parentChartId}_current_reality` &&
         e.entityType === 'current_reality'
       );
-      
-      if (currentReality) {
-        // The completed action step becomes part of current reality, 
-        // creating new structural tension for continued advancement
-        currentReality.observations.push(`Completed: ${actionStep.observations[0]}`);
-        if (currentReality.metadata) {
-          currentReality.metadata.updatedAt = new Date().toISOString();
+
+      if (parentCurrentReality) {
+        const completionMessage = `Completed: ${actionStep.observations[0]}`;
+        if (!parentCurrentReality.observations.includes(completionMessage)) {
+          parentCurrentReality.observations.push(completionMessage);
+          if (parentCurrentReality.metadata) {
+            parentCurrentReality.metadata.updatedAt = new Date().toISOString();
+          }
         }
       }
     }
