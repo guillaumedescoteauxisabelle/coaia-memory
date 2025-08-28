@@ -484,7 +484,7 @@ class KnowledgeGraphManager {
   async markActionStepComplete(actionStepName: string): Promise<void> {
     const graph = await this.loadGraph();
     // An "action step" can be a 'desired_outcome' of a sub-chart, or a simple 'action_step' entity.
-    const actionStep = graph.entities.find(e => e.observations.includes(actionStepName) && (e.entityType === 'action_step' || e.entityType === 'desired_outcome'));
+    const actionStep = graph.entities.find(e => e.name === actionStepName && (e.entityType === 'action_step' || e.entityType === 'desired_outcome'));
 
     if (!actionStep) {
       throw new Error(`Action step ${actionStepName} not found`);
@@ -634,7 +634,7 @@ class KnowledgeGraphManager {
     updateCurrentReality?: boolean
   ): Promise<void> {
     const graph = await this.loadGraph();
-    const actionStep = graph.entities.find(e => e.name === actionStepName && e.entityType === 'action_step');
+    const actionStep = graph.entities.find(e => e.name === actionStepName && (e.entityType === 'action_step' || e.entityType === 'desired_outcome'));
     
     if (!actionStep) {
       throw new Error(`Action step ${actionStepName} not found`);
@@ -648,16 +648,23 @@ class KnowledgeGraphManager {
 
     // Optionally update current reality with progress
     if (updateCurrentReality && actionStep.metadata?.chartId) {
+      const chartEntity = graph.entities.find(e => e.name === `${actionStep.metadata!.chartId}_chart`);
+      const parentChartId = chartEntity?.metadata?.parentChart;
+      const targetChartId = parentChartId || actionStep.metadata!.chartId;
+
       const currentReality = graph.entities.find(e => 
-        e.name === `${actionStep.metadata!.chartId}_current_reality` && 
+        e.name === `${targetChartId}_current_reality` && 
         e.entityType === 'current_reality'
       );
       
       if (currentReality) {
         // Progress observations flow into current reality, changing the structural dynamic
-        currentReality.observations.push(`Progress on ${actionStep.observations[0]}: ${progressObservation}`);
-        if (currentReality.metadata) {
-          currentReality.metadata.updatedAt = new Date().toISOString();
+        const progressMessage = `Progress on ${actionStep.observations[0]}: ${progressObservation}`;
+        if (!currentReality.observations.includes(progressMessage)) {
+          currentReality.observations.push(progressMessage);
+          if (currentReality.metadata) {
+            currentReality.metadata.updatedAt = new Date().toISOString();
+          }
         }
       }
     }
