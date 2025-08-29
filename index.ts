@@ -201,6 +201,28 @@ class KnowledgeGraphManager {
     }
   }
 
+  // Helper function to extract current reality from user context
+  // Maintains structural tension by requiring explicit assessment
+  private extractCurrentRealityFromContext(userInput: string, actionStepTitle: string): string | null {
+    // Common patterns that indicate current reality assessment
+    const realityPatterns = [
+      /(?:currently|right now|at present|today)\s+(.{10,})/i,
+      /(?:i am|we are|the situation is)\s+(.{10,})/i,
+      /(?:i have|we have|there is|there are)\s+(.{10,})/i,
+      /(?:my current|our current|the current)\s+(.{10,})/i
+    ];
+
+    for (const pattern of realityPatterns) {
+      const match = userInput.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+
+    // If no explicit current reality found, require assessment
+    return null;
+  }
+
   private async saveGraph(graph: KnowledgeGraph): Promise<void> {
     const lines = [
       ...graph.entities.map(e => JSON.stringify({ type: "entity", ...e })),
@@ -763,8 +785,12 @@ class KnowledgeGraphManager {
       actionStepDueDate = midpoint.toISOString();
     }
 
-    // Set default current reality if not provided
-    const actionCurrentReality = currentReality || `Ready to begin: ${actionStepTitle}`;
+    // Require current reality assessment - no defaults that prematurely resolve tension
+    if (!currentReality) {
+      throw new Error(`Current reality assessment required for action step "${actionStepTitle}". Structural tension cannot be created without honest assessment of current state.`);
+    }
+    
+    const actionCurrentReality = currentReality;
 
     // Create telescoped structural tension chart
     const telescopedChart = await this.createStructuralTensionChart(
@@ -1133,10 +1159,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             currentReality: {
               type: "string",
-              description: "Optional current reality specific to this action step. If not provided, defaults to 'Ready to begin: [title]'"
+              description: "Current reality specific to this action step. Required to maintain structural tension - assess the actual current state relative to this action step, not readiness to begin."
             }
           },
-          required: ["parentChartId", "actionStepTitle"]
+          required: ["parentChartId", "actionStepTitle", "currentReality"]
         }
       },
       {
