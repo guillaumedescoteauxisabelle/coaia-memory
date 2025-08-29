@@ -843,7 +843,7 @@ class KnowledgeGraphManager {
     // If current reality not provided, try to extract from context
     let finalCurrentReality = currentReality;
     if (!finalCurrentReality) {
-      finalCurrentReality = this.extractCurrentRealityFromContext(userContext, actionStepTitle);
+      finalCurrentReality = this.extractCurrentRealityFromContext(userContext, actionStepTitle) ?? undefined;
     }
     
     // If still no current reality, provide guidance while maintaining tension
