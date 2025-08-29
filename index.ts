@@ -831,6 +831,35 @@ class KnowledgeGraphManager {
     };
   }
 
+  // Enhanced method for LLMs to telescope with intelligent current reality extraction
+  async telescopeActionStepWithContext(
+    parentChartId: string, 
+    actionStepTitle: string, 
+    userContext: string,
+    currentReality?: string,
+    dueDate?: string
+  ): Promise<{ chartId: string; actionStepName: string }> {
+    
+    // If current reality not provided, try to extract from context
+    let finalCurrentReality = currentReality;
+    if (!finalCurrentReality) {
+      finalCurrentReality = this.extractCurrentRealityFromContext(userContext, actionStepTitle);
+    }
+    
+    // If still no current reality, provide guidance while maintaining tension
+    if (!finalCurrentReality) {
+      throw new Error(
+        `Current reality assessment needed for "${actionStepTitle}". ` +
+        `Please assess your actual current state relative to this action step. ` +
+        `Example: "I have never used Django before" or "I completed the basics but haven't built a real project" ` +
+        `rather than assuming readiness. Structural tension requires honest current reality assessment.`
+      );
+    }
+    
+    // Proceed with telescoping using the assessed current reality
+    return this.addActionStep(parentChartId, actionStepTitle, finalCurrentReality, dueDate);
+  }
+
   async removeActionStep(parentChartId: string, actionStepName: string): Promise<void> {
     const graph = await this.loadGraph();
     
@@ -1068,12 +1097,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "telescope_action_step",
-        description: "Break down an action step into a detailed structural tension chart with optional initial action steps",
+        description: "Break down an action step into a detailed structural tension chart. CRITICAL: Current reality must be an honest assessment of actual current state relative to this specific action step, NOT readiness or preparation statements. This maintains structural tension essential for creative advancement.",
         inputSchema: {
           type: "object",
           properties: {
             actionStepName: { type: "string", description: "Name of the action step to telescope" },
-            newCurrentReality: { type: "string", description: "Current reality specific to this action step" },
+            newCurrentReality: { 
+              type: "string", 
+              description: "REQUIRED: Honest assessment of actual current state relative to this action step. Examples: 'Never used Django before', 'Completed models section, struggling with views'. AVOID: 'Ready to begin', 'Prepared to start'."
+            },
             initialActionSteps: {
               type: "array",
               items: { type: "string" },
