@@ -203,6 +203,9 @@ node test-coaia.js
 **The Core Dynamic:**
 When you clearly know what you want (desired outcome) AND honestly assess where you are (current reality), you create **structural tension** - an unresolved dynamic that naturally seeks resolution. This is not a "gap to be filled" but a **generative force** that advances the system toward equilibrium.
 
+**Delayed Resolution Principle:**
+"Tolerate discrepancy, tension, and delayed resolution" - Robert Fritz. The COAIA Memory system must **hold tension** rather than prematurely resolve it through defaults like "Ready to begin". Premature resolution destroys the structural tension essential for creative advancement. Current reality must be explicitly assessed, never assumed.
+
 **How Action Steps Work:**
 Action steps are **strategic secondary actions** - intermediary end results we choose to achieve. They are not steps that "bridge gaps" but rather **named results** that:
 1. Can be observed in current reality when achieved
