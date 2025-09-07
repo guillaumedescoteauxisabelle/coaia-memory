@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { promises as fs } from 'fs';
 import path from 'path';
+import { LLM_GUIDANCE } from "./generated-llm-guidance.js";
 import { fileURLToPath } from 'url';
 import minimist from 'minimist';
 import { isAbsolute } from 'path';
@@ -355,6 +356,63 @@ class KnowledgeGraphManager {
     dueDate: string,
     actionSteps?: string[]
   ): Promise<{ chartId: string; entities: Entity[]; relations: Relation[] }> {
+    // Educational validation for creative orientation
+    const problemSolvingWords = ['fix', 'solve', 'eliminate', 'prevent', 'stop', 'avoid', 'reduce', 'remove'];
+    const detectedProblemWords = problemSolvingWords.filter(word => 
+      desiredOutcome.toLowerCase().includes(word)
+    );
+    
+    if (detectedProblemWords.length > 0) {
+      throw new Error(`🌊 CREATIVE ORIENTATION REQUIRED
+
+Desired Outcome: "${desiredOutcome}"
+
+❌ **Problem**: Contains problem-solving language: "${detectedProblemWords.join(', ')}"
+📚 **Principle**: Structural Tension Charts use creative orientation - focus on what you want to CREATE, not what you want to eliminate.
+
+🎯 **Reframe Your Outcome**:
+Instead of elimination → Creation focus
+
+✅ **Examples**:
+- Instead of: "Fix communication problems"
+- Use: "Establish clear, effective communication practices"
+
+- Instead of: "Reduce website loading time"  
+- Use: "Achieve fast, responsive website performance"
+
+**Why This Matters**: Problem-solving creates oscillating patterns. Creative orientation creates advancing patterns toward desired outcomes.
+
+💡 **Tip**: Run 'init_llm_guidance' for complete methodology overview.`);
+    }
+    
+    // Educational validation for current reality
+    const readinessWords = ['ready to', 'prepared to', 'all set', 'ready for', 'set to'];
+    const detectedReadinessWords = readinessWords.filter(phrase => 
+      currentReality.toLowerCase().includes(phrase)
+    );
+    
+    if (detectedReadinessWords.length > 0) {
+      throw new Error(`🌊 DELAYED RESOLUTION PRINCIPLE VIOLATION
+
+Current Reality: "${currentReality}"
+
+❌ **Problem**: Contains readiness assumptions: "${detectedReadinessWords.join(', ')}"
+📚 **Principle**: "Tolerate discrepancy, tension, and delayed resolution" - Robert Fritz
+
+🎯 **What's Needed**: Factual assessment of your actual current state (not readiness or preparation).
+
+✅ **Examples**:
+- Instead of: "Ready to learn Python"
+- Use: "Never programmed before, interested in web development"
+
+- Instead of: "Prepared to start the project"
+- Use: "Have project requirements, no code written yet"
+
+**Why This Matters**: Readiness assumptions prematurely resolve the structural tension needed for creative advancement.
+
+💡 **Tip**: Run 'init_llm_guidance' for complete methodology overview.`);
+    }
+
     const chartId = `chart_${Date.now()}`;
     const timestamp = new Date().toISOString();
     
@@ -787,7 +845,25 @@ class KnowledgeGraphManager {
 
     // Require current reality assessment - no defaults that prematurely resolve tension
     if (!currentReality) {
-      throw new Error(`Current reality assessment required for action step "${actionStepTitle}". Structural tension cannot be created without honest assessment of current state.`);
+      throw new Error(`🌊 DELAYED RESOLUTION PRINCIPLE VIOLATION
+
+Action step: "${actionStepTitle}"
+
+❌ **Problem**: Current reality assessment missing
+📚 **Principle**: "Tolerate discrepancy, tension, and delayed resolution" - Robert Fritz
+
+🎯 **What's Needed**: Honest assessment of your actual current state relative to this action step.
+
+✅ **Examples**:
+- "Never used Django, completed Python basics"  
+- "Built one API, struggling with authentication"
+- "Read 3 chapters, concepts still unclear"
+
+❌ **Avoid**: "Ready to begin", "Prepared to start", "All set to..."
+
+**Why This Matters**: Premature resolution destroys the structural tension that generates creative advancement. The system NEEDS honest current reality to create productive tension.
+
+💡 **Tip**: Run 'init_llm_guidance' for complete methodology overview.`);
     }
     
     const actionCurrentReality = currentReality;
@@ -897,7 +973,8 @@ const knowledgeGraphManager = new KnowledgeGraphManager();
 // The server instance and tools exposed to AI models
 const server = new Server({
   name: "coaia-memory",
-  version: "2.2.3",
+  version: "2.2.9",
+  description: "COAIA Memory - Structural Tension Charts based on Robert Fritz methodology. 🚨 NEW LLM? Run 'init_llm_guidance' first to understand delayed resolution principle and avoid common mistakes."
 },    {
     capabilities: {
       tools: {},
@@ -1078,13 +1155,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "create_structural_tension_chart",
-        description: "Create a new structural tension chart with desired outcome, current reality, and optional action steps",
+        name: "create_structural_tension_chart", 
+        description: "Create a new structural tension chart with desired outcome, current reality, and optional action steps. CRITICAL: Use creative orientation (what you want to CREATE) not problem-solving (what you want to fix/solve). Current reality must be factual assessment, never 'ready to begin'.",
         inputSchema: {
           type: "object",
           properties: {
-            desiredOutcome: { type: "string", description: "What you want to create or achieve" },
-            currentReality: { type: "string", description: "Your current situation in relation to the desired outcome" },
+            desiredOutcome: { type: "string", description: "What you want to CREATE (not solve/fix). Focus on positive outcomes, not problems to eliminate." },
+            currentReality: { type: "string", description: "Your current situation - factual assessment only. NEVER use 'ready to begin' or similar readiness statements." },
             dueDate: { type: "string", description: "When you want to achieve this outcome (ISO date string)" },
             actionSteps: {
               type: "array",
@@ -1179,7 +1256,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "add_action_step",
-        description: "Add a strategic action step to an existing structural tension chart (creates telescoped chart)",
+        description: "Add a strategic action step to an existing structural tension chart (creates telescoped chart). WARNING: Requires honest current reality assessment - avoid 'ready to begin' language. Action steps become full structural tension charts.",
         inputSchema: {
           type: "object", 
           properties: {
@@ -1231,6 +1308,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             newTitle: { type: "string", description: "New action step title" }
           },
           required: ["actionStepName", "newTitle"]
+        }
+      },
+      {
+        name: "init_llm_guidance",
+        description: "🚨 NEW LLM? Essential guidance for understanding COAIA Memory's structural tension methodology, delayed resolution principle, and proper tool usage. Run this FIRST to avoid common mistakes.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            format: { 
+              type: "string", 
+              enum: ["full", "quick", "save_directive"], 
+              default: "full",
+              description: "Level of detail: 'full' for complete guidance, 'quick' for essentials only, 'save_directive' for session memory instructions"
+            }
+          }
         }
       }
     ],
@@ -1368,6 +1460,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         args.newTitle as string
       );
       return { content: [{ type: "text", text: `Action step title updated for '${args.actionStepName}'` }] };
+    case "init_llm_guidance":
+      const format = args.format as string || "full";
+      
+      if (format === "save_directive") {
+        return { content: [{ type: "text", text: `## 💡 RECOMMENDED: Save This Guidance
+
+**Claude Code**: Add this guidance to CLAUDE.md in your project directory
+**Gemini**: Save as GEMINI.md in your workspace  
+**Other Agents**: Create AGENTS.md or similar session memory file
+
+This ensures you remember COAIA Memory's structural tension principles across our entire conversation.
+
+**Quick Command**: Use format="full" to get the complete guidance content to save.` }] };
+      }
+      
+      if (format === "quick") {
+        return { content: [{ type: "text", text: `## 🚨 COAIA Memory Quick Reference
+
+**CRITICAL**: "Ready to begin" = WRONG. Current reality must be factual assessment.
+
+**Core Tools**:
+1. \`list_active_charts\` → Start here, see all charts
+2. \`create_structural_tension_chart\` → New chart (outcome + reality + actions)
+3. \`add_action_step\` → Add strategic actions (creates telescoped chart)
+4. \`telescope_action_step\` → Break down actions into detailed sub-charts
+
+**Common Mistakes**:
+❌ "Ready to begin Django tutorial" 
+✅ "Never used Django, completed Python basics"
+
+Use format="full" for complete guidance.` }] };
+      }
+      
+      // Default: full guidance
+      return { content: [{ type: "text", text: LLM_GUIDANCE }] };
     default:
       throw new Error(`Unknown tool: ${name}`);
   }

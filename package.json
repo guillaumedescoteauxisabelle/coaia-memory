@@ -28,7 +28,8 @@
     "structural-dynamics"
   ],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/*.js",
+    "build": "npm run build:guidance && tsc && shx chmod +x dist/*.js",
+    "build:guidance": "node scripts/consolidate-guidance.js",
     "prepare": "npm run build",
     "watch": "tsc --watch"
   },
