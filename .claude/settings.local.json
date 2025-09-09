@@ -9,7 +9,10 @@
       "Bash(mkdir:*)",
       "Bash(npm test)",
       "mcp__coaia-memory__open_nodes",
-      "mcp__coaia-memory__list_active_charts"
+      "mcp__coaia-memory__list_active_charts",
+      "mcp__dummy-coaia-memory-charts__list_active_charts",
+      "mcp__dummy-coaia-memory-charts__add_observations",
+      "Bash(node:*)"
     ],
     "additionalDirectories": [
       "/media/jgi/F/Dropbox/jgt/edu/llm_mastery/arenas_250706/CreatingYourLifeCourse",

@@ -5,6 +5,32 @@ All notable changes to COAIA Memory will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-08-31
+
+### 🚀 LLM-Intelligent Enhancement
+
+**Key Features**:
+- 🌊 Comprehensive LLM Guidance System
+  - Build-time consolidated methodology documentation
+  - `init_llm_guidance` tool with multiple formats (full, quick, save_directive)
+  - Intelligent error handling with educational responses
+
+- 🧠 Enhanced AI Interaction
+  - Creative orientation validation
+  - Delayed resolution principle enforcement
+  - Problem-solving language detection
+  - Comprehensive teaching messages with Robert Fritz's principles
+
+- 📘 Documentation Improvements
+  - Methodology warnings in tool descriptions
+  - Intelligent error messages guiding LLMs
+  - Self-documenting MCP server
+
+### Technical Enhancements
+- Updated server description to highlight LLM guidance
+- Improved validation with educational error responses
+- Added context extraction for current reality assessment
+
 ## [2.2.8] - 2025-08-29
 
 ### 🐛 Bug Fixes
