@@ -152,7 +152,7 @@ COAIA Memory implements Robert Fritz's Structural Tension methodology. This is N
     const cleanedContent = cleanContent(extractedContent);
     
     if (cleanedContent.trim()) {
-      consolidatedGuidance += `## From ${source.file}\n\n${cleanedContent}\n\n---\n\n`;
+      consolidatedGuidance += `${cleanedContent}\n\n`;
     }
   }
 
