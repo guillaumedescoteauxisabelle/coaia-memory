@@ -1001,19 +1001,19 @@ Action step: "${actionStepTitle}"
 
   // Enhanced method for LLMs to telescope with intelligent current reality extraction
   async telescopeActionStepWithContext(
-    parentChartId: string, 
-    actionStepTitle: string, 
+    parentChartId: string,
+    actionStepTitle: string,
     userContext: string,
     currentReality?: string,
     dueDate?: string
   ): Promise<{ chartId: string; actionStepName: string }> {
-    
+
     // If current reality not provided, try to extract from context
     let finalCurrentReality = currentReality;
     if (!finalCurrentReality) {
       finalCurrentReality = this.extractCurrentRealityFromContext(userContext, actionStepTitle) ?? undefined;
     }
-    
+
     // If still no current reality, provide guidance while maintaining tension
     if (!finalCurrentReality) {
       throw new Error(
@@ -1023,9 +1023,174 @@ Action step: "${actionStepTitle}"
         `rather than assuming readiness. Structural tension requires honest current reality assessment.`
       );
     }
-    
+
     // Proceed with telescoping using the assessed current reality
     return this.addActionStep(parentChartId, actionStepTitle, dueDate, finalCurrentReality);
+  }
+
+  // Unified interface for managing action steps - handles both creation and expansion
+  async manageActionStep(
+    parentReference: string,
+    actionDescription: string,
+    currentReality?: string,
+    initialActionSteps?: string[],
+    dueDate?: string
+  ): Promise<{ chartId: string; actionStepName: string }> {
+    const graph = await this.loadGraph();
+
+    // Pattern detection: Determine if parentReference is entity name or chart ID
+    const actionStepPattern = /^chart_\d+_action_\d+$/;
+    const desiredOutcomePattern = /^chart_\d+_desired_outcome$/;
+    const chartIdPattern = /^chart_\d+$/;
+
+    const isActionStepEntity = actionStepPattern.test(parentReference);
+    const isDesiredOutcomeEntity = desiredOutcomePattern.test(parentReference);
+    const isChartId = chartIdPattern.test(parentReference);
+
+    // Route 1: Expanding existing action_step entity (legacy pattern)
+    if (isActionStepEntity) {
+      const actionStep = graph.entities.find(e =>
+        e.name === parentReference && e.entityType === 'action_step'
+      );
+
+      if (!actionStep) {
+        // Provide helpful error with available actions
+        const allActionSteps = graph.entities
+          .filter(e => e.entityType === 'action_step')
+          .map(e => `- ${e.name}: "${e.observations[0]}"`);
+
+        throw new Error(`🔍 ACTION STEP ENTITY NOT FOUND
+
+Received: "${parentReference}"
+Expected: Valid action_step entity name (e.g., "chart_123_action_1")
+
+Available action steps in memory:
+${allActionSteps.length > 0 ? allActionSteps.join('\n') : '(none found)'}
+
+Tip: If creating a new action step, use the parent chart ID instead.`);
+      }
+
+      // Use telescoping logic for legacy action_step entities
+      const currentRealityToUse = currentReality || "Expanding action step into detailed sub-chart";
+      const telescopedResult = await this.telescopeActionStep(
+        parentReference,
+        currentRealityToUse,
+        initialActionSteps
+      );
+      // Transform result to include actionStepName
+      return {
+        chartId: telescopedResult.chartId,
+        actionStepName: `${telescopedResult.chartId}_desired_outcome`
+      };
+    }
+
+    // Route 2: Expanding existing desired_outcome entity (modern pattern)
+    if (isDesiredOutcomeEntity) {
+      const desiredOutcome = graph.entities.find(e =>
+        e.name === parentReference && e.entityType === 'desired_outcome'
+      );
+
+      if (!desiredOutcome || !desiredOutcome.metadata?.chartId) {
+        throw new Error(`🔍 DESIRED OUTCOME ENTITY NOT FOUND
+
+Received: "${parentReference}"
+Expected: Valid desired_outcome entity name (e.g., "chart_123_desired_outcome")
+
+Tip: If creating a new action step, use the parent chart ID instead.`);
+      }
+
+      // Use telescoping logic for desired_outcome entities
+      const currentRealityToUse = currentReality || "Expanding desired outcome into detailed sub-chart";
+      const telescopedResult = await this.telescopeActionStep(
+        parentReference,
+        currentRealityToUse,
+        initialActionSteps
+      );
+      // Transform result to include actionStepName
+      return {
+        chartId: telescopedResult.chartId,
+        actionStepName: `${telescopedResult.chartId}_desired_outcome`
+      };
+    }
+
+    // Route 3: Creating new action step under parent chart (modern pattern)
+    if (isChartId) {
+      // Validate parent chart exists
+      const parentChart = graph.entities.find(e =>
+        e.entityType === 'structural_tension_chart' &&
+        e.metadata?.chartId === parentReference
+      );
+
+      if (!parentChart) {
+        // Provide helpful error with available charts
+        const allCharts = graph.entities
+          .filter(e => e.entityType === 'structural_tension_chart')
+          .map(e => {
+            const outcome = graph.entities.find(o =>
+              o.name === `${e.metadata?.chartId}_desired_outcome`
+            );
+            return `- ${e.metadata?.chartId}: "${outcome?.observations[0] || 'Unknown'}"`;
+          });
+
+        throw new Error(`🔍 PARENT CHART NOT FOUND
+
+Received: "${parentReference}"
+Expected: Valid chart ID (e.g., "chart_123")
+
+Available charts in memory:
+${allCharts.length > 0 ? allCharts.join('\n') : '(none found)'}
+
+Tip: Use 'list_active_charts' to see all available charts.`);
+      }
+
+      // Enforce delayed resolution principle for new action creation
+      if (!currentReality) {
+        throw new Error(`🌊 DELAYED RESOLUTION PRINCIPLE VIOLATION
+
+Action step: "${actionDescription}"
+Parent chart: "${parentReference}"
+
+❌ **Problem**: Current reality assessment missing
+📚 **Principle**: "Tolerate discrepancy, tension, and delayed resolution" - Robert Fritz
+
+🎯 **What's Needed**: Honest assessment of actual current state relative to this action step.
+
+✅ **Examples**:
+- "Never used Django, completed Python basics"
+- "Built one API, struggling with authentication"
+- "Read 3 chapters, concepts still unclear"
+
+❌ **Avoid**: "Ready to begin", "Prepared to start", "All set to..."
+
+**Why This Matters**: Premature resolution destroys structural tension essential for creative advancement.
+
+💡 **Tip**: Run 'init_llm_guidance' for complete methodology overview.`);
+      }
+
+      // Create new action step as telescoped chart
+      return await this.addActionStep(
+        parentReference,
+        actionDescription,
+        dueDate,
+        currentReality
+      );
+    }
+
+    // Route 4: Invalid format - provide comprehensive guidance
+    throw new Error(`🚨 INVALID PARENT REFERENCE FORMAT
+
+Received: "${parentReference}"
+
+Valid formats:
+1. Chart ID: "chart_123" → Creates new action step
+2. Action entity: "chart_123_action_1" → Expands existing legacy action step
+3. Desired outcome: "chart_123_desired_outcome" → Expands existing modern action step
+
+Examples:
+- Create new action: manageActionStep("chart_123", "Complete tutorial", "Never used Django")
+- Expand existing: manageActionStep("chart_123_action_1", "Complete tutorial", undefined, ["Step 1", "Step 2"])
+
+💡 **Tip**: Use 'list_active_charts' to see available charts and their IDs.`);
   }
 
   async removeActionStep(parentChartId: string, actionStepName: string): Promise<void> {
@@ -1267,13 +1432,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "telescope_action_step",
-        description: "Break down an action step into a detailed structural tension chart. CRITICAL: Current reality must be an honest assessment of actual current state relative to this specific action step, NOT readiness or preparation statements. This maintains structural tension essential for creative advancement.",
+        description: "⚠️ DEPRECATED: Use 'manage_action_step' instead for unified interface. Break down an action step into a detailed structural tension chart. CRITICAL: Current reality must be an honest assessment of actual current state relative to this specific action step, NOT readiness or preparation statements. This maintains structural tension essential for creative advancement.",
         inputSchema: {
           type: "object",
           properties: {
             actionStepName: { type: "string", description: "Name of the action step to telescope" },
-            newCurrentReality: { 
-              type: "string", 
+            newCurrentReality: {
+              type: "string",
               description: "REQUIRED: Honest assessment of actual current state relative to this action step. Examples: 'Never used Django before', 'Completed models section, struggling with views'. AVOID: 'Ready to begin', 'Prepared to start'."
             },
             initialActionSteps: {
@@ -1348,15 +1513,46 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         }
       },
       {
-        name: "add_action_step",
-        description: "Add a strategic action step to an existing structural tension chart (creates telescoped chart). WARNING: Requires honest current reality assessment - avoid 'ready to begin' language. Action steps become full structural tension charts.",
+        name: "manage_action_step",
+        description: "✨ RECOMMENDED: Unified interface for managing action steps - handles both creation and expansion. Automatically detects whether you're creating a new action step (chart ID) or expanding an existing one (entity name). Provides clear error messages when parameters are invalid.",
         inputSchema: {
-          type: "object", 
+          type: "object",
+          properties: {
+            parentReference: {
+              type: "string",
+              description: "Chart ID (e.g., 'chart_123') to create new action step, OR action step entity name (e.g., 'chart_123_action_1' or 'chart_123_desired_outcome') to expand existing action step"
+            },
+            actionDescription: {
+              type: "string",
+              description: "Title/description of the action step"
+            },
+            currentReality: {
+              type: "string",
+              description: "REQUIRED for new action creation. Honest assessment of actual current state relative to this action step. Examples: 'Never used Django', 'Completed models, struggling with views'. AVOID: 'Ready to begin'. Optional when expanding existing actions."
+            },
+            initialActionSteps: {
+              type: "array",
+              items: { type: "string" },
+              description: "Optional list of sub-actions for the action step"
+            },
+            dueDate: {
+              type: "string",
+              description: "Optional due date (ISO string). Auto-distributed if not provided."
+            }
+          },
+          required: ["parentReference", "actionDescription"]
+        }
+      },
+      {
+        name: "add_action_step",
+        description: "⚠️ DEPRECATED: Use 'manage_action_step' instead for unified interface. Add a strategic action step to an existing structural tension chart (creates telescoped chart). WARNING: Requires honest current reality assessment - avoid 'ready to begin' language. Action steps become full structural tension charts.",
+        inputSchema: {
+          type: "object",
           properties: {
             parentChartId: { type: "string", description: "ID of the parent chart to add the action step to" },
             actionStepTitle: { type: "string", description: "Title of the action step (becomes desired outcome of telescoped chart)" },
-            dueDate: { 
-              type: "string", 
+            dueDate: {
+              type: "string",
               description: "Optional due date for the action step (ISO string). If not provided, auto-distributed between now and parent due date"
             },
             currentReality: {
@@ -1554,6 +1750,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         args.newObservations as string[]
       );
       return { content: [{ type: "text", text: `Current reality updated for chart '${args.chartId}'` }] };
+    case "manage_action_step":
+      const manageActionResult = await knowledgeGraphManager.manageActionStep(
+        args.parentReference as string,
+        args.actionDescription as string,
+        args.currentReality as string,
+        args.initialActionSteps as string[],
+        args.dueDate as string
+      );
+      return { content: [{ type: "text", text: `Action step '${args.actionDescription}' managed for parent '${args.parentReference}'. Result: ${JSON.stringify(manageActionResult, null, 2)}` }] };
     case "add_action_step":
       const addActionResult = await knowledgeGraphManager.addActionStep(
         args.parentChartId as string,
