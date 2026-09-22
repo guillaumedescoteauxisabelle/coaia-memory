@@ -79,4 +79,10 @@ Thumbs.db
 .mcp.json
 .hch
 .mcp*
+.claude/ 
+
+# Test artifacts
+test-*.jsonl
+test-memory.jsonl
+START-wampum-2607280257.sh
 LAA/

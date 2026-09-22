@@ -47,6 +47,30 @@ This directory contains comprehensive RISE (Reverse-engineer, Intent-extract, Sp
    - Learning through doing vs manuals
    - Principle teaching integration
 
+7. **[mmot_evaluation_loop.spec.md](./mmot_evaluation_loop.spec.md)**
+   - Autonomous agent self-evaluation and self-correction
+   - Four-phase Managerial Moment of Truth (MMOT) process
+   - Elements of Performance (DESIGN & EXECUTION criteria)
+   - Directional perspectives and narrative beat emission
+
+8. **[cli_interactive_visualization.spec.md](./cli_interactive_visualization.spec.md)**
+   - Human-intuitive terminal interface for chart management
+   - Progress visualization and status indicators
+   - Multi-format Markdown export (charts, stats, progress)
+   - Interactive configuration and context management
+
+9. **[input_validation_integrity.spec.md](./input_validation_integrity.spec.md)**
+   - Strict schema enforcement for multi-LLM compatibility
+   - Recursive type and constraint checking
+   - Pre-built validation patterns for common data structures
+   - Early-fail integrity protection for storage layer
+
+10. **[wampum_belt_visualization.spec.md](./wampum_belt_visualization.spec.md)**
+    - Displaying Wampum Belt content from a chart in a visual interface
+    - Grid render model: rows × cols, bead color as encoded meaning, vacancy as content
+    - Positional reading resolution (`col:N` → `row:N` → left/center/right → canonical)
+    - Ceremony surface: witnesses, renewal dates, and links that no relation edge carries
+
 ---
 
 ## 🎯 Core Creative Intent
